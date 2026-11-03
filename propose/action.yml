@@ -2,7 +2,7 @@ name: Konaet Reviewable Update
 description: Commits only allowed paths, pushes without force and creates or updates a pull request.
 inputs:
   token:
-    description: Token temporario retornado pela Action Konaet Bot.
+    description: Token temporario retornado pela Action KONAET.
     required: true
   bot-login:
     description: Login Bot verificado pela Action de identidade.

@@ -1,6 +1,6 @@
-![Konaet Bot: identidade verificável e mudanças revisáveis](assets/konaet-cover.png)
+![KONAET: identidade verificável e mudanças revisáveis](assets/konaet-cover.png)
 
-# Konaet Bot
+# KONAET
 
 **Da App ao diff. Do diff à revisão.**
 
@@ -10,6 +10,8 @@ Verified GitHub App identity and reviewable updates, with explicit repository sc
 [![Licença MIT](https://img.shields.io/badge/license-MIT-c5ef65)](LICENSE)
 
 Uma Action para autenticar sua GitHub App e um módulo para transformar arquivos gerados pelo projeto em propostas revisáveis. A Konaet confere a identidade do bot, restringe o diff aos caminhos permitidos e entrega uma pull request ao mantenedor.
+
+A identidade visual usa o **cubo roxo original da KONAET**, fornecido no projeto `konaet-cover`. O nome público é **KONAET**; o endereço técnico `7dsolv/konaet-bot` preserva as integrações existentes. [Origem da marca](visuals/brand/README.md).
 
 ![Demonstração animada: App, identidade, diff, push e revisão](assets/konaet-flow.gif)
 
@@ -47,7 +49,7 @@ jobs:
   propor:
     runs-on: ubuntu-latest
     steps:
-      - uses: 7dsolv/konaet-bot@v1.1.0
+      - uses: 7dsolv/konaet-bot@v1.1.1
         id: konaet
         with:
           client-id: ${{ vars.KONAET_APP_CLIENT_ID }}
@@ -64,7 +66,7 @@ jobs:
           mkdir -p relatorios
           date -u '+Execucao em %Y-%m-%dT%H:%M:%SZ' > relatorios/estado.txt
 
-      - uses: 7dsolv/konaet-bot/propose@v1.1.0
+      - uses: 7dsolv/konaet-bot/propose@v1.1.1
         with:
           token: ${{ steps.konaet.outputs.token }}
           bot-login: ${{ steps.konaet.outputs.bot-login }}
@@ -88,7 +90,7 @@ r = run_konaet_tests(pwd, fullfile(pwd, 'artifacts'));
 render_konaet_assets(fullfile(pwd, 'artifacts', 'showcase'), r);
 ```
 
-O CI executa esses comandos, actionlint e ShellCheck, verifica o contrato JSON e guarda o relatório e os visuais nos artifacts. Os desenhos são originais, gerados por [`visuals/render_konaet_assets.m`](visuals/render_konaet_assets.m): capa, ícone da App, diagrama SVG e GIF de 48 quadros. [Manifesto dos visuais](assets/showcase-manifest.json).
+O CI executa esses comandos, actionlint e ShellCheck, verifica o contrato JSON e guarda o relatório e os visuais nos artifacts. A apresentação é composta por [`visuals/render_konaet_assets.m`](visuals/render_konaet_assets.m): capa, diagrama SVG e GIF de 48 quadros com o cubo original. O ícone da App conserva os bytes da imagem de origem; o CI confere seu SHA-256 e sua procedência. [Manifesto dos visuais](assets/showcase-manifest.json).
 
 ## Estado de publicação
 

@@ -1,33 +1,27 @@
 function manifest = render_konaet_assets(output_dir, report)
-%RENDER_KONAET_ASSETS Identidade visual original desenhada em MATLAB.
+%RENDER_KONAET_ASSETS Vitrine MATLAB com a marca original KONAET.
 %   Gera PNG, SVG e GIF. A animacao ilustra o protocolo, nao trafego ao vivo.
 assert(report.failed == 0, 'A vitrine so pode usar um relatorio aprovado.');
 if ~isfolder(output_dir), mkdir(output_dir); end
-C.bg = [0.035 0.041 0.070]; C.panel = [0.066 0.073 0.125];
+brand = konaet_brand();
+C.brand = brand.rgb;
+C.bg = [13 5 22]/255; C.panel = [0.066 0.040 0.105];
 C.line = [0.19 0.21 0.30]; C.white = [0.94 0.93 0.88];
-C.muted = [0.61 0.64 0.75]; C.violet = [0.49 0.39 0.98];
-C.lime = [0.72 0.94 0.36]; C.copper = [0.96 0.63 0.40];
+C.muted = [0.68 0.64 0.77]; C.violet = [0.76 0.27 1.0];
+C.lime = [0.81 0.65 1.0]; C.copper = [0.98 0.65 0.92];
 
 [f, ax] = canvas(1600, 800, C);
 guard = onCleanup(@() close_figure(f));
 for x = 70:100:1570
     line(ax, [x x], [80 730], Color=C.bg + 0.025, LineWidth=0.4);
 end
-label(ax, 80, 724, 'KONAET / ENGINEERING AUTOMATION', 17, C.muted, 'normal');
-label(ax, 80, 580, 'KONAET', 70, C.white, 'bold');
-label(ax, 84, 488, 'BOT', 70, C.lime, 'bold');
+label(ax, 80, 724, 'AUTOMAÇÃO / IDENTIDADE / REVISÃO', 17, C.muted, 'normal');
+label(ax, 80, 550, 'KONAET', 88, C.white, 'bold');
+label(ax, 84, 458, 'SUA IDENTIDADE. SEU FLUXO.', 21, C.lime, 'bold');
 label(ax, 84, 365, 'Identidade verificável.', 26, C.white, 'bold');
 label(ax, 84, 309, 'Mudanças revisáveis.', 26, C.white, 'bold');
 label(ax, 84, 238, 'Do token limitado ao diff que o mantenedor pode revisar.', 18, C.muted, 'normal');
-emblem(ax, 1165, 430, 160, C);
-angles = linspace(0, 2*pi, 220);
-for radius = [215 255]
-    plot(ax, 1165 + radius*cos(angles), 430 + 0.83*radius*sin(angles), ...
-        Color=C.line, LineWidth=1.0);
-end
-dot(ax, 1165+255*cos(0.6), 430+0.83*255*sin(0.6), 8, C.lime);
-dot(ax, 1165+215*cos(3.5), 430+0.83*215*sin(3.5), 6, C.copper);
-label(ax, 1002, 690, 'APP  /  DIFF  /  REVIEW', 16, C.muted, 'normal');
+emblem(ax, 1170, 444, 285, C);
 chips = {'ESCOPO DO REPOSITÓRIO', 'DIFF PERMITIDO', 'REVISÃO HUMANA'};
 for i = 1:3
     x = 84 + (i-1)*500;
@@ -40,7 +34,8 @@ close(f); clear guard;
 
 [f, ax] = canvas(1600, 860, C);
 guard = onCleanup(@() close_figure(f));
-label(ax, 70, 800, 'A anatomia de uma mudança revisável', 40, C.white, 'bold');
+label(ax, 70, 800, 'KONAET / Arquitetura de uma proposta', 38, C.white, 'bold');
+emblem(ax, 1480, 784, 53, C);
 label(ax, 70, 749, 'Identidade, dados e decisão humana atravessam fronteiras diferentes.', 20, C.muted, 'normal');
 xs = [70 610 1150]; widths = [380 410 380];
 headers = {'01 / GITHUB APP', '02 / RUNNER DO PROJETO', '03 / REPOSITÓRIO'};
@@ -73,11 +68,8 @@ exportgraphics(ax, fullfile(output_dir, 'konaet-architecture.png'), Resolution=1
 exportgraphics(ax, fullfile(output_dir, 'konaet-architecture.svg'), BackgroundColor=C.bg);
 close(f); clear guard;
 
-[f, ax] = canvas(512, 512, C);
-guard = onCleanup(@() close_figure(f));
-emblem(ax, 256, 256, 150, C);
-exportgraphics(ax, fullfile(output_dir, 'konaet-app-icon.png'), Resolution=100, BackgroundColor=C.bg);
-close(f); clear guard;
+% O icone publicado conserva exatamente os bytes da marca original.
+copyfile(brand.file, fullfile(output_dir, 'konaet-app-icon.png'));
 
 gif_file = fullfile(output_dir, 'konaet-flow.gif');
 frame_file = fullfile(output_dir, 'frame-preview.png');
@@ -99,7 +91,7 @@ for frame = 1:frame_count
     stage = min(5, floor(progress*5)+1);
     label(ax, 56, 558, 'KONAET / FLOW TRACE', 26, C.white, 'bold');
     label(ax, 56, 514, 'Demonstração do protocolo de proposta', 16, C.muted, 'normal');
-    emblem(ax, 1050, 543, 35, C);
+    emblem(ax, 1050, 543, 56, C);
     centers = 142:218:1014;
     plot(ax, [centers(1) centers(end)], [360 360], Color=C.line, LineWidth=2);
     for i = 1:5
@@ -158,6 +150,11 @@ manifest.animation.height = info(1).Height;
 manifest.animation.bytes = gif_info.bytes;
 manifest.animation.live_telemetry = false;
 manifest.real_app_status = report.live_app.status;
+manifest.brand.name = brand.name;
+manifest.brand.source_url = brand.source_url;
+manifest.brand.source_revision = brand.source_revision;
+manifest.brand.source_sha256 = brand.sha256;
+manifest.brand.icon_preserves_source_bytes = true;
 fid = fopen(fullfile(output_dir, 'showcase-manifest.json'), 'w', 'n', 'UTF-8');
 assert(fid >= 0); cleanup = onCleanup(@() fclose(fid)); %#ok<NASGU>
 fprintf(fid, '%s', jsonencode(manifest, PrettyPrint=true));
@@ -206,13 +203,8 @@ rectangle(ax, Position=[x-radius y-radius radius*2 radius*2], ...
 end
 
 function emblem(ax, cx, cy, scale, C)
-patch(ax, cx+scale*[-.67 -.40 -.40 -.67], cy+scale*[-.78 -.78 .78 .78], ...
-    C.white, EdgeColor='none');
-patch(ax, cx+scale*[-.32 -.08 .73 .43], cy+scale*[-.02 -.22 .58 .80], ...
-    C.violet, EdgeColor='none');
-patch(ax, cx+scale*[-.32 -.08 .73 .43], cy+scale*[.02 .22 -.58 -.80], ...
-    C.lime, EdgeColor='none');
-dot(ax, cx-scale*.24, cy, scale*.075, C.copper);
+% Eixo Y crescente para cima: a primeira linha da imagem fica no topo.
+image(ax, XData=[cx-scale cx+scale], YData=[cy+scale cy-scale], CData=C.brand);
 end
 
 function [map, lookup] = palette_map()

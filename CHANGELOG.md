@@ -1,5 +1,12 @@
 # Histórico
 
+## v1.1.1
+
+- Nome público unificado para **KONAET**, incluindo metadados da Action e apresentação.
+- Cubo roxo original de `7dsolv/konaet-cover` na capa, ícone, diagrama e GIF; substitui a letra K da apresentação anterior.
+- Ícone publicado sem alterar os bytes da origem. Procedência, revisão e SHA-256 registrados e verificados no CI.
+- Caminhos de uso e contrato do módulo preservados.
+
 ## v1.1.0
 
 - A identidade passa a conferir ID positivo, login exato e tipo `Bot`.

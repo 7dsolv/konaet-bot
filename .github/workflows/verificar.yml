@@ -106,7 +106,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: matlab-actions/run-command@v3
         with:
-          command: r = jsondecode(fileread(fullfile('artifacts','test-report.json'))); addpath('visuals'); render_konaet_assets(fullfile(pwd,'artifacts','showcase'),r);
+          command: r = jsondecode(fileread(fullfile('artifacts','test-report.json'))); addpath('visuals'); output = fullfile(pwd,'artifacts','showcase'); render_konaet_assets(output,r); copyfile(fullfile('artifacts','test-report.json'),fullfile(output,'test-report.json')); verify_konaet_assets(output);
       - name: Verificar as midias publicadas
         if: github.event_name != 'workflow_dispatch'
         uses: matlab-actions/run-command@v3
