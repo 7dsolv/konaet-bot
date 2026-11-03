@@ -18,7 +18,7 @@ proposal_names = {'no-change', 'new-proposal', 'delete-and-create', 'spaces', ..
     'empty-allowlist', 'wrong-push-url', 'newline-filename', 'unchanged-remote', ...
     'rename-within', 'rename-from-outside', 'hook-stages-outside', ...
     'author-environment', 'remote-outside-allowlist', 'recovery-outside-allowlist', ...
-    'glob-path', 'merged-remote'};
+    'glob-path', 'merged-remote', 'rename-unstaged-within', 'cancelled-staging'};
 for i = 1:numel(identity_names)
     name = identity_names{i};
     cases(end+1) = evaluate(name, 'identity-offline', @() identity_case(root, name)); %#ok<AGROW>
@@ -121,6 +121,13 @@ switch name
     case 'rename-within'
         git(f, 'checkout -- data/value.txt');
         git(f, 'mv data/value.txt data/renamed.txt');
+    case 'rename-unstaged-within'
+        git(f, 'checkout -- data/value.txt');
+        movefile(fullfile(f.work, 'data', 'value.txt'), fullfile(f.work, 'data', 'renamed.txt'));
+    case 'cancelled-staging'
+        git(f, 'checkout -- data/value.txt');
+        git(f, 'rm data/value.txt');
+        write_text(fullfile(f.work, 'data', 'value.txt'), 'base');
     case 'rename-from-outside'
         git(f, 'mv fixture-source.txt data/imported.txt'); expected_failure = true;
     case 'hook-stages-outside'
@@ -221,8 +228,8 @@ else
     assert(status == 0, 'Proposta falhou: %s', log);
 end
 assert(strcmp(base, bare_git(f, 'rev-parse refs/heads/main')), 'Branch base foi alterada.');
-if ismember(name, {'no-change', 'unchanged-remote', 'merged-remote'})
-    if strcmp(name, 'no-change')
+if ismember(name, {'no-change', 'unchanged-remote', 'merged-remote', 'cancelled-staging'})
+    if ismember(name, {'no-change', 'cancelled-staging'})
         assert(isempty(remote_head(f, 'konaet/updates')));
     elseif strcmp(name, 'unchanged-remote')
         assert(strcmp(base, remote_head(f, 'konaet/updates')));
@@ -258,7 +265,7 @@ else
             assert(strcmp(bare_git(f, 'show refs/heads/konaet/updates:data/new.txt'), 'new'));
         case 'spaces'
             assert(strcmp(bare_git(f, ['show ' q('refs/heads/konaet/updates:data/novo arquivo.txt')]), 'spaces'));
-        case 'rename-within'
+        case {'rename-within', 'rename-unstaged-within'}
             assert(strcmp(bare_git(f, 'show refs/heads/konaet/updates:data/renamed.txt'), 'base'));
         case 'literal-inputs'
             assert(~isfile(sentinel), 'Entrada textual executou um comando.');

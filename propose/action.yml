@@ -114,6 +114,15 @@ runs:
         }
 
         remote_sha="$(git ls-remote --heads origin "refs/heads/${PROPOSAL_BRANCH}" | cut -f1)"
+        if [ "${#changed[@]}" -gt 0 ]; then
+          git diff --no-renames --name-only -z -- > "$temp_dir/diff"
+          git ls-files --others --exclude-standard -z >> "$temp_dir/diff"
+          mapfile -d '' to_stage < <(sort -zu "$temp_dir/diff")
+          if [ "${#to_stage[@]}" -gt 0 ]; then
+            git --literal-pathspecs add -A -- "${to_stage[@]}"
+          fi
+          if git diff --cached --quiet --; then changed=(); fi
+        fi
         created=false
         commit_sha=''
         if [ "${#changed[@]}" -eq 0 ]; then
@@ -136,7 +145,6 @@ runs:
             git merge-base --is-ancestor "$remote_sha" HEAD || fail 'A branch remota avancou; atualize o checkout antes de gerar o diff.'
           fi
           git fetch --no-tags origin "refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
-          git --literal-pathspecs add -A -- "${changed[@]}"
           email="${BOT_ID}+${BOT_LOGIN}@users.noreply.github.com"
           GIT_AUTHOR_NAME="$BOT_LOGIN" GIT_AUTHOR_EMAIL="$email" \
             GIT_COMMITTER_NAME="$BOT_LOGIN" GIT_COMMITTER_EMAIL="$email" \
