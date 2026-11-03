@@ -1,0 +1,158 @@
+name: Konaet Reviewable Update
+description: Commits only allowed paths, pushes without force and creates or updates a pull request.
+inputs:
+  token:
+    description: Token temporario retornado pela Action Konaet Bot.
+    required: true
+  bot-login:
+    description: Login Bot verificado pela Action de identidade.
+    required: true
+  bot-id:
+    description: ID numerico verificado pela Action de identidade.
+    required: true
+  paths:
+    description: Arquivos ou diretorios permitidos, um por linha, relativos a raiz e sem glob.
+    required: true
+  branch:
+    description: Branch de proposta; nunca pode ser a branch padrao ou a base.
+    default: konaet/updates
+  base:
+    description: Branch que recebera a proposta.
+    default: main
+  title:
+    description: Titulo da proposta.
+    default: 'Konaet: revisar atualizacoes'
+  body:
+    description: Descricao enviada ao revisor.
+    default: Atualizacao gerada pelo workflow para revisao do mantenedor.
+  commit-message:
+    description: Mensagem do commit.
+    default: 'Konaet: preparar alteracoes para revisao'
+outputs:
+  changed:
+    description: true quando um novo commit foi criado; false em recuperacao ou sem mudancas.
+    value: ${{ steps.propose.outputs.changed }}
+  commit:
+    description: SHA enviado ou recuperado da branch existente.
+    value: ${{ steps.propose.outputs.commit }}
+  pr-url:
+    description: URL da proposta criada ou atualizada; vazia quando nao ha proposta.
+    value: ${{ steps.propose.outputs.pr-url }}
+  pr-number:
+    description: Numero da proposta.
+    value: ${{ steps.propose.outputs.pr-number }}
+runs:
+  using: composite
+  steps:
+    - name: Publicar somente o diff permitido para revisao
+      id: propose
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        GH_HOST: github.com
+        BOT_LOGIN: ${{ inputs.bot-login }}
+        BOT_ID: ${{ inputs.bot-id }}
+        ALLOW_PATHS: ${{ inputs.paths }}
+        PROPOSAL_BRANCH: ${{ inputs.branch }}
+        BASE_BRANCH: ${{ inputs.base }}
+        PR_TITLE: ${{ inputs.title }}
+        PR_BODY: ${{ inputs.body }}
+        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        SERVER_URL: ${{ github.server_url }}
+      run: |
+        set -euo pipefail
+        fail() { echo "::error::$1"; exit 1; }
+        [ "$SERVER_URL" = 'https://github.com' ] || fail 'Este pacote suporta GitHub.com.'
+        [[ "$GITHUB_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || fail 'Repositorio invalido.'
+        [[ "$BOT_LOGIN" =~ ^[a-z0-9-]+\[bot\]$ ]] && [[ "$BOT_ID" =~ ^[1-9][0-9]*$ ]] || fail 'Identidade Bot invalida.'
+        git check-ref-format --branch "$PROPOSAL_BRANCH" >/dev/null || fail 'Branch de proposta invalida.'
+        git check-ref-format --branch "$BASE_BRANCH" >/dev/null || fail 'Branch base invalida.'
+        [ "$PROPOSAL_BRANCH" != "$BASE_BRANCH" ] && [ "$PROPOSAL_BRANCH" != "$DEFAULT_BRANCH" ] || fail 'A proposta nao pode publicar na branch base/padrao.'
+        [ -n "$PR_TITLE" ] && [ -n "$COMMIT_MESSAGE" ] || fail 'Titulo e mensagem sao obrigatorios.'
+        cd "$(git rev-parse --show-toplevel)"
+        origin="$(git config --get remote.origin.url)"
+        expected="https://github.com/${GITHUB_REPOSITORY}"
+        [ "$origin" = "$expected" ] || [ "$origin" = "${expected}.git" ] || fail 'Origin difere do repositorio do workflow.'
+        push_url="$(git config --get remote.origin.pushurl || true)"
+        [ -z "$push_url" ] || [ "$push_url" = "$expected" ] || [ "$push_url" = "${expected}.git" ] || fail 'Push URL difere do repositorio do workflow.'
+
+        allowed=()
+        while IFS= read -r entry || [ -n "$entry" ]; do
+          entry="${entry%$'\r'}"
+          [ -n "$entry" ] || continue
+          entry="${entry%/}"
+          if [[ -z "$entry" || "$entry" = /* || "$entry" = *\\* || "$entry" = :* || "$entry" = *//* || "$entry" =~ (^|/)\.\.?(/|$) || "$entry" = *[\*\?\[]* ]]; then
+            fail 'Paths deve conter caminhos relativos literais, sem glob ou travessia.'
+          fi
+          allowed+=("$entry")
+        done <<< "$ALLOW_PATHS"
+        [ "${#allowed[@]}" -gt 0 ] || fail 'Informe pelo menos um caminho permitido.'
+
+        mapfile -d '' changed < <({ git diff --name-only -z HEAD --; git ls-files --others --exclude-standard -z; } | sort -zu)
+        for file in "${changed[@]}"; do
+          [[ "$file" != *$'\n'* && "$file" != *$'\r'* ]] || fail 'Nomes com quebra de linha nao sao suportados.'
+          [[ "$file" != .github/workflows/* ]] || fail 'Este modulo nao altera workflows.'
+          permitted=false
+          for entry in "${allowed[@]}"; do
+            if [[ "$file" = "$entry" || "$file" = "$entry/"* ]]; then permitted=true; break; fi
+          done
+          [ "$permitted" = true ] || fail 'O diff inclui arquivos fora de paths; nenhuma mudanca foi enviada.'
+        done
+
+        remote_sha="$(git ls-remote --heads origin "refs/heads/${PROPOSAL_BRANCH}" | cut -f1)"
+        created=false
+        commit_sha=''
+        if [ "${#changed[@]}" -eq 0 ]; then
+          if [ -z "$remote_sha" ]; then
+            printf 'changed=false\ncommit=\npr-url=\npr-number=\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch --no-tags origin "refs/heads/${PROPOSAL_BRANCH}:refs/remotes/origin/${PROPOSAL_BRANCH}" "refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          if git diff --quiet "refs/remotes/origin/${BASE_BRANCH}" "$remote_sha" --; then
+            printf 'changed=false\ncommit=\npr-url=\npr-number=\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          commit_sha="$remote_sha"
+        else
+          if [ -n "$remote_sha" ]; then
+            git fetch --no-tags origin "refs/heads/${PROPOSAL_BRANCH}:refs/remotes/origin/${PROPOSAL_BRANCH}"
+            git merge-base --is-ancestor "$remote_sha" HEAD || fail 'A branch remota avancou; atualize o checkout antes de gerar o diff.'
+          fi
+          git --literal-pathspecs add -A -- "${changed[@]}"
+          email="${BOT_ID}+${BOT_LOGIN}@users.noreply.github.com"
+          git -c user.name="$BOT_LOGIN" -c user.email="$email" commit -m "$COMMIT_MESSAGE"
+          commit_sha="$(git rev-parse HEAD)"
+          git -c http.https://github.com/.extraheader= -c credential.helper= \
+            -c 'credential.helper=!gh auth git-credential' \
+            push origin "HEAD:refs/heads/${PROPOSAL_BRANCH}"
+          created=true
+        fi
+        printf 'changed=%s\ncommit=%s\n' "$created" "$commit_sha" >> "$GITHUB_OUTPUT"
+
+        body_file="$(mktemp)"
+        trap 'rm -f "$body_file"' EXIT
+        printf '%s\n' "$PR_BODY" > "$body_file"
+        find_pr() {
+          gh pr list --repo "$GITHUB_REPOSITORY" --head "$PROPOSAL_BRANCH" \
+            --base "$BASE_BRANCH" --state open --json number,url \
+            --jq '.[0] // empty | [.number,.url] | @tsv'
+        }
+        record="$(find_pr)"
+        if [ -z "$record" ]; then
+          if url="$(gh pr create --repo "$GITHUB_REPOSITORY" --base "$BASE_BRANCH" \
+            --head "$PROPOSAL_BRANCH" --title "$PR_TITLE" --body-file "$body_file")"; then
+            number="${url##*/}"
+          else
+            record="$(find_pr)"
+            [ -n "$record" ] || fail 'O push terminou, mas a API nao criou a proposta. Uma nova execucao pode recupera-la.'
+          fi
+        fi
+        if [ -n "$record" ]; then
+          IFS=$'\t' read -r number url <<< "$record"
+        fi
+        [[ "$number" =~ ^[1-9][0-9]*$ ]] && [ "$url" = "https://github.com/${GITHUB_REPOSITORY}/pull/${number}" ] || fail 'A API retornou uma proposta inesperada.'
+        if [ -n "$record" ]; then
+          gh pr edit "$number" --repo "$GITHUB_REPOSITORY" --title "$PR_TITLE" --body-file "$body_file"
+        fi
+        printf 'pr-url=%s\npr-number=%s\n' "$url" "$number" >> "$GITHUB_OUTPUT"

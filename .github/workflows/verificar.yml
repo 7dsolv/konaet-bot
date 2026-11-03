@@ -30,11 +30,19 @@ jobs:
             .hook_attributes.active == false and .default_events == [] and
             .default_permissions == {"contents":"write","pull_requests":"write"}' github-app.json
 
-  cadastro-matlab:
+  contratos-git-e-visuais:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: matlab-actions/setup-matlab@v3
       - uses: matlab-actions/run-command@v3
         with:
-          command: u = abrir_cadastro_konaet(false); p = matlab.net.URI(u); assert(strcmp(p.Host,'github.com')); assert(strcmp(p.Path(end),'new')); assert(contains(u,'name=Konaet')); assert(contains(u,'public=true')); assert(contains(u,'webhook_active=false')); assert(contains(u,'contents=write')); assert(contains(u,'pull_requests=write'));
+          command: addpath('tests'); r = run_konaet_tests(pwd,fullfile(pwd,'artifacts')); addpath('visuals'); render_konaet_assets(fullfile(pwd,'artifacts','showcase'),r);
+      - name: Guardar evidencias e vitrine
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: konaet-evidence-and-showcase
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14

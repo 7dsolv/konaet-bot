@@ -1,8 +1,8 @@
 name: Konaet Bot
-description: Gera um token de GitHub App e resolve a identidade real do bot para commits e propostas.
+description: Verified GitHub App identity and scoped tokens for reviewable repository updates.
 author: Adilson Oliveira / Konaet
 branding:
-  icon: cpu
+  icon: git-pull-request
   color: purple
 inputs:
   client-id:
@@ -52,18 +52,20 @@ runs:
       shell: bash
       env:
         GH_TOKEN: ${{ steps.app.outputs.token }}
+        GH_HOST: github.com
         APP_SLUG: ${{ steps.app.outputs.app-slug }}
         EXPECTED_SLUG: ${{ inputs.expected-slug }}
       run: |
         set -euo pipefail
-        if [ "$APP_SLUG" != "$EXPECTED_SLUG" ]; then
+        if [ -z "$EXPECTED_SLUG" ] || [ "$APP_SLUG" != "$EXPECTED_SLUG" ]; then
           echo '::error::A App autenticada nao corresponde ao slug configurado.'
           exit 1
         fi
         login="${APP_SLUG}[bot]"
-        bot_id="$(gh api "/users/${login}" --jq '.id')"
-        if ! [[ "$bot_id" =~ ^[0-9]+$ ]]; then
-          echo '::error::O GitHub nao retornou um ID valido para o bot.'
+        identity="$(gh api --hostname github.com "/users/${login}" --jq '[.id,.login,.type] | @tsv')"
+        IFS=$'\t' read -r bot_id actual_login account_type <<< "$identity"
+        if ! [[ "$bot_id" =~ ^[1-9][0-9]*$ ]] || [ "$actual_login" != "$login" ] || [ "$account_type" != 'Bot' ]; then
+          echo '::error::O GitHub nao confirmou ID, login e tipo Bot esperados.'
           exit 1
         fi
         {
