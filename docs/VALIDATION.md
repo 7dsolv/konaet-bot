@@ -2,6 +2,8 @@
 
 A suíte está em [`tests/run_konaet_tests.m`](../tests/run_konaet_tests.m). Ela extrai os scripts dos próprios arquivos `action.yml`, evitando manter uma segunda implementação do módulo nos testes.
 
+A revisão `48c32ef033788bb527e85242dc95ffd04179858d` completou **40/40 cenários offline**, com zero falhas. O [registro da execução](https://github.com/7dsolv/konaet-bot/actions/runs/41720256943) também contém o teste nativo do composite e a geração da vitrine. O campo `revision` do relatório identifica a origem dos números exibidos nas imagens.
+
 | Grupo | O que é exercitado |
 | --- | --- |
 | Identidade offline | Bot válido; slug diferente ou vazio; ID inválido; login inesperado; conta `User`; erro da API. |

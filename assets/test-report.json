@@ -1,0 +1,338 @@
+{
+  "schema_version": 1,
+  "revision": "48c32ef033788bb527e85242dc95ffd04179858d",
+  "mode": "offline-contract-and-real-local-git",
+  "total": 40,
+  "planned": 40,
+  "complete": true,
+  "passed": 40,
+  "failed": 0,
+  "seconds": 7.410004,
+  "cases": [
+    {
+      "name": "valid-bot",
+      "group": "identity-offline",
+      "passed": true,
+      "seconds": 1.423532,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "wrong-slug",
+      "group": "identity-offline",
+      "passed": true,
+      "seconds": 0.098467,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "empty-slug",
+      "group": "identity-offline",
+      "passed": true,
+      "seconds": 0.086646,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "invalid-id",
+      "group": "identity-offline",
+      "passed": true,
+      "seconds": 0.104971,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "wrong-login",
+      "group": "identity-offline",
+      "passed": true,
+      "seconds": 0.100396,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "user-is-not-bot",
+      "group": "identity-offline",
+      "passed": true,
+      "seconds": 0.087459,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "api-failure",
+      "group": "identity-offline",
+      "passed": true,
+      "seconds": 0.089912,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "no-change",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.188255,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "new-proposal",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.190741,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "delete-and-create",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.179766,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "spaces",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.175423,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "outside-allowlist",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.175727,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "staged-outside-allowlist",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.149972,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "path-traversal",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.115502,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "path-magic",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.09968,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "protected-branch",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.113958,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "workflow-file",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.107448,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "wrong-origin",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.130107,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "stale-branch",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.181463,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "existing-pr",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.229534,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "recover-after-api-failure",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.315893,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "concurrent-pr",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.175413,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "literal-inputs",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.168366,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "unexpected-pr-url",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.154758,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "push-race",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.189566,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "empty-allowlist",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.098089,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "wrong-push-url",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.11878,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "newline-filename",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.106314,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "unchanged-remote",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.150061,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "rename-within",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.183354,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "rename-from-outside",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.110693,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "hook-stages-outside",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.151788,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "author-environment",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.178467,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "remote-outside-allowlist",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.235835,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "recovery-outside-allowlist",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.206215,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "glob-path",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.098236,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "merged-remote",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.201487,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "rename-unstaged-within",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.176905,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "cancelled-staging",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.140203,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "registration-contract",
+      "group": "matlab",
+      "passed": true,
+      "seconds": 0.212913,
+      "error": "",
+      "error_id": ""
+    }
+  ],
+  "live_app": {
+    "status": "NOT_RUN",
+    "reason": "Sem credenciais de App; gh de teste nao faz chamadas de rede."
+  },
+  "generated_utc": "2026-11-03T21:18:00Z"
+}

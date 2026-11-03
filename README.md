@@ -21,7 +21,7 @@ O GIF ilustra o protocolo. Os números exibidos vêm dos testes offline com **Gi
 | --- | --- |
 | **Identidade** | Confere slug, ID, login e tipo `Bot` retornados pela API. |
 | **Escopo** | Gera token temporário limitado ao repositório atual, revogado pela dependência oficial ao fim do job. |
-| **Diff** | Aceita arquivos e diretórios literais em `paths`; recusa alterações inesperadas, inclusive as já staged. |
+| **Diff** | Confere arquivos literais, renomeações e o diff completo da proposta, inclusive alterações staged ou introduzidas por hooks. |
 | **Git** | Preserva a branch base e usa push normal. Uma branch remota divergente interrompe a atualização. |
 | **Proposta** | Cria ou atualiza a PR da branch; recupera falha depois do push sem criar outro commit. |
 | **Decisão** | O mantenedor revisa e decide o merge. |
