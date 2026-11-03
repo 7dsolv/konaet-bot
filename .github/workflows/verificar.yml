@@ -32,12 +32,29 @@ jobs:
 
   contratos-git-e-visuais:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: matlab-actions/setup-matlab@v3
-      - uses: matlab-actions/run-command@v3
+      - name: Testar contratos e Git local real
+        uses: matlab-actions/run-command@v3
         with:
-          command: addpath('tests'); r = run_konaet_tests(pwd,fullfile(pwd,'artifacts')); addpath('visuals'); render_konaet_assets(fullfile(pwd,'artifacts','showcase'),r);
+          command: addpath('tests'); run_konaet_tests(pwd,fullfile(pwd,'artifacts'));
+      - name: Guardar o relatorio de testes
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: konaet-test-report
+          path: artifacts/test-report.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Desenhar a vitrine em MATLAB
+        uses: matlab-actions/run-command@v3
+        with:
+          command: r = jsondecode(fileread(fullfile('artifacts','test-report.json'))); addpath('visuals'); render_konaet_assets(fullfile(pwd,'artifacts','showcase'),r);
+      - name: Mostrar o alcance da verificacao
+        run: |
+          jq -r '"Konaet: \(.passed)/\(.total) cenarios offline aprovados.\n\nApp real: \(.live_app.status).\n\nA suite usa Git local real e API gh de teste. Veja os relatorios e os visuais nos artifacts."' artifacts/test-report.json >> "$GITHUB_STEP_SUMMARY"
       - name: Guardar evidencias e vitrine
         if: always()
         uses: actions/upload-artifact@v7

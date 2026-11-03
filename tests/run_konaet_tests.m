@@ -285,6 +285,10 @@ names = {'PATH','GH_TOKEN','GH_HOST','GITHUB_REPOSITORY','GITHUB_OUTPUT', ...
     'GIT_AUTHOR_NAME','GIT_AUTHOR_EMAIL','GIT_COMMITTER_NAME','GIT_COMMITTER_EMAIL'};
 old = cellfun(@getenv, names, UniformOutput=false);
 guard = onCleanup(@() cleanup_fixture(f.folder, names, old));
+% Um valor vazio restaurado por setenv ainda pode existir no ambiente do Git.
+% O repositorio fixture sempre comeca com uma identidade explicita e isolada.
+setenv('GIT_AUTHOR_NAME', 'Fixture'); setenv('GIT_AUTHOR_EMAIL', 'fixture@example.invalid');
+setenv('GIT_COMMITTER_NAME', 'Fixture'); setenv('GIT_COMMITTER_EMAIL', 'fixture@example.invalid');
 cmd(['git init --bare --initial-branch=main ' q(f.remote)]);
 cmd(['git clone ' q(f.remote) ' ' q(f.work)]);
 git(f, 'config user.name Fixture'); git(f, 'config user.email fixture@example.invalid');
