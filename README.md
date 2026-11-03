@@ -1,68 +1,101 @@
+![Konaet Bot: identidade verificável e mudanças revisáveis](assets/konaet-cover.png)
+
 # Konaet Bot
 
-Uma identidade de GitHub App para commits e propostas da Konaet, com uma Action reutilizável por outros projetos.
+**Da App ao diff. Do diff à revisão.**
 
-![Verificação do pacote](https://github.com/7dsolv/konaet-bot/actions/workflows/verificar.yml/badge.svg)
+Verified GitHub App identity and reviewable updates, with explicit repository scope.
 
-**Estado:** pacote de configuração e automação. A identidade `konaet[bot]` só fica ativa depois que a App **Konaet** é registrada, instalada e autenticada. O CI do pacote valida os arquivos; o workflow manual **Verificar identidade real da App** valida a autenticação depois da instalação.
+[![Verificar pacote Konaet](https://github.com/7dsolv/konaet-bot/actions/workflows/verificar.yml/badge.svg)](https://github.com/7dsolv/konaet-bot/actions/workflows/verificar.yml)
+[![Licença MIT](https://img.shields.io/badge/license-MIT-c5ef65)](LICENSE)
 
-## Ativar a Konaet na conta 7dsolv
+Uma Action para autenticar sua GitHub App e um módulo para transformar arquivos gerados pelo projeto em propostas revisáveis. A Konaet confere a identidade do bot, restringe o diff aos caminhos permitidos e entrega uma pull request ao mantenedor.
 
-1. Abra o [cadastro oficial já preenchido](https://github.com/settings/apps/new?name=Konaet&description=Automacao%20Konaet%20com%20identidade%20propria%2C%20commits%20e%20propostas%20para%20revisao%20humana.&url=https%3A%2F%2Fgithub.com%2F7dsolv%2Fkonaet-bot&public=true&webhook_active=false&contents=write&pull_requests=write) na sessão `7dsolv` e conclua **Create GitHub App**. O GitHub decide a disponibilidade do nome no envio do formulário.
-2. Na página da App, gere a chave privada e use **Install App** para selecionar `RealidadeQuantica` e `konaet-bot`.
-3. Em cada repositório que vai executar a automação, configure a variável Actions `KONAET_APP_CLIENT_ID` e o segredo Actions `KONAET_APP_PRIVATE_KEY`. Guarde o conteúdo da chave somente no segredo.
-4. Execute **Actions → Verificar identidade real da App → Run workflow** neste repositório. Ele confere o login real pela API e não altera arquivos.
+![Demonstração animada: App, identidade, diff, push e revisão](assets/konaet-flow.gif)
 
-Também é possível abrir o mesmo cadastro pelo MATLAB:
+O GIF ilustra o protocolo. Os números exibidos vêm dos testes offline com **Git real em repositórios locais** e respostas de API controladas. A autenticação de uma App instalada é uma verificação separada. [Relatório reproduzível](docs/VALIDATION.md).
 
-```matlab
-abrir_cadastro_konaet
-```
+## O que o pacote faz
 
-O arquivo [`github-app.json`](github-app.json) registra a configuração na raiz. O helper MATLAB usa os parâmetros oficiais do formulário: App pública, webhook desligado, acesso de escrita a conteúdo e pull requests. O pacote não hospeda um servidor de webhooks.
+| Etapa | Comportamento |
+| --- | --- |
+| **Identidade** | Confere slug, ID, login e tipo `Bot` retornados pela API. |
+| **Escopo** | Gera token temporário limitado ao repositório atual, revogado pela dependência oficial ao fim do job. |
+| **Diff** | Aceita arquivos e diretórios literais em `paths`; recusa alterações inesperadas, inclusive as já staged. |
+| **Git** | Preserva a branch base e usa push normal. Uma branch remota divergente interrompe a atualização. |
+| **Proposta** | Cria ou atualiza a PR da branch; recupera falha depois do push sem criar outro commit. |
+| **Decisão** | O mantenedor revisa e decide o merge. |
 
-## Commit, push e proposta para aprovação
+![Arquitetura: fronteiras de identidade, runner e revisão](assets/konaet-architecture.svg)
 
-Neste repositório, o workflow **Konaet - commit e proposta para revisao** já está disponível na aba Actions. Depois de configurar a App, execute-o manualmente. Ele cria uma branch, grava um estado de execução, faz commit como o bot autenticado e abre uma pull request para revisão. O merge é decisão do mantenedor.
+## Começar com sua App
 
-Para usar em outro projeto, copie [`.github/workflows/propor.yml`](.github/workflows/propor.yml) para a pasta de workflows do destino e configure as credenciais da App daquele mantenedor.
+1. Use o [cadastro oficial pré-preenchido](https://github.com/settings/apps/new?name=Konaet&description=Automacao%20Konaet%20com%20identidade%20propria%2C%20commits%20e%20propostas%20para%20revisao%20humana.&url=https%3A%2F%2Fgithub.com%2F7dsolv%2Fkonaet-bot&public=true&webhook_active=false&contents=write&pull_requests=write). Escolha um nome disponível para sua App.
+2. Instale-a nos repositórios desejados com **Contents** e **Pull requests: Read and write**.
+3. Em Actions, crie a variável `KONAET_APP_CLIENT_ID` e o segredo `KONAET_APP_PRIVATE_KEY`.
+4. Em `expected-slug`, informe o slug da sua App. O padrão `konaet` exige a App oficial com esse slug.
 
-Para integrar a Action a um workflow próprio:
+A configuração está em [`github-app.json`](github-app.json). Pelo MATLAB, `abrir_cadastro_konaet` abre o mesmo formulário. A chave da App oficial permanece com seu mantenedor; outros usuários usam suas próprias credenciais.
 
 ```yaml
-- uses: 7dsolv/konaet-bot@v1.0.0
-  id: konaet
-  with:
-    client-id: ${{ vars.KONAET_APP_CLIENT_ID }}
-    private-key: ${{ secrets.KONAET_APP_PRIVATE_KEY }}
+name: Propor resultados
+on: [workflow_dispatch]
+permissions:
+  contents: read
 
-- uses: actions/checkout@v7
-  with:
-    token: ${{ steps.konaet.outputs.token }}
+jobs:
+  propor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 7dsolv/konaet-bot@v1.1.0
+        id: konaet
+        with:
+          client-id: ${{ vars.KONAET_APP_CLIENT_ID }}
+          private-key: ${{ secrets.KONAET_APP_PRIVATE_KEY }}
+          expected-slug: konaet # substitua pelo slug da sua App
 
-- name: Configurar autoria real
-  env:
-    BOT_LOGIN: ${{ steps.konaet.outputs.bot-login }}
-    BOT_EMAIL: ${{ steps.konaet.outputs.bot-email }}
-  run: |
-    git config user.name "$BOT_LOGIN"
-    git config user.email "$BOT_EMAIL"
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ steps.konaet.outputs.token }}
+          fetch-depth: 0
+
+      - name: Gerar arquivo demonstrativo
+        run: |
+          mkdir -p relatorios
+          date -u '+Execucao em %Y-%m-%dT%H:%M:%SZ' > relatorios/estado.txt
+
+      - uses: 7dsolv/konaet-bot/propose@v1.1.0
+        with:
+          token: ${{ steps.konaet.outputs.token }}
+          bot-login: ${{ steps.konaet.outputs.bot-login }}
+          bot-id: ${{ steps.konaet.outputs.bot-id }}
+          paths: relatorios/estado.txt
+          branch: konaet/resultado-${{ github.run_id }}
+          base: ${{ github.event.repository.default_branch }}
+          title: 'Konaet: revisar resultado gerado'
+          body: O mantenedor pode conferir o diff antes do merge.
 ```
 
-O token fica limitado ao repositório atual e é revogado ao fim do job. A Action consulta o ID real do bot e recusa uma App cujo slug difira de `expected-slug` (padrão: `konaet`). Use um runner Linux com Bash e GitHub CLI, como `ubuntu-latest`.
+Para reutilizar uma branch entre execuções, faça checkout dela antes de gerar os arquivos. O [workflow manual do pacote](.github/workflows/propor.yml) já faz essa preparação. O [contrato de uso](docs/CONTRACT.md) detalha entradas, saídas, recuperação e conflitos.
 
-## Reutilização por outras pessoas
+## Testar e reproduzir a apresentação
 
-O código é público e tem licença MIT. Outro mantenedor pode criar sua própria App pelo mesmo cadastro, escolher um nome disponível e informar esse slug em `expected-slug`. Cada mantenedor guarda sua própria chave. A chave da App oficial Konaet não é distribuída a terceiros.
+No MATLAB em Linux, com Bash e Git:
 
-Marcar a App como pública permite que outros usuários a instalem; isso não fornece a eles a chave da App nem inicia um serviço de automação hospedado. Este pacote fornece a Action para workflows configurados pelo mantenedor.
+```matlab
+addpath('tests', 'visuals')
+r = run_konaet_tests(pwd, fullfile(pwd, 'artifacts'));
+render_konaet_assets(fullfile(pwd, 'artifacts', 'showcase'), r);
+```
 
-## Identidade e histórico
+O CI executa esses comandos, actionlint e ShellCheck, verifica o contrato JSON e guarda o relatório e os visuais nos artifacts. Os desenhos são originais, gerados por [`visuals/render_konaet_assets.m`](visuals/render_konaet_assets.m): capa, ícone da App, diagrama SVG e GIF de 48 quadros. [Manifesto dos visuais](assets/showcase-manifest.json).
 
-`github-actions[bot]` é a conta da plataforma. O workflow usa a infraestrutura GitHub Actions, e a GitHub App determina a identidade dos commits feitos com seu token. Alterar `git user.name` sozinho não cria uma conta bot. Contribuições antigas do bot da plataforma continuam no histórico e podem continuar na lista de contribuidores.
+## Estado de publicação
 
-O pacote cuida da autenticação, autoria e envio de propostas; os cálculos científicos continuam no [RealidadeQuantica](https://github.com/7dsolv/RealidadeQuantica) e a pesquisa de modelos no [Konaet-IA](https://github.com/7dsolv/Konaet-IA). Não há transferência de um modelo de IA a partir do bot da plataforma.
+O pacote é público e reutilizável sob licença MIT. A publicação da **Action** no Marketplace exige o contrato de desenvolvedor e a seleção de categoria na tela de release do GitHub. [Preparação da listagem](docs/MARKETPLACE.md).
 
-Configuração em YAML/JSON e helper em MATLAB, sem fontes HTML, JavaScript ou Python neste repositório. As Actions oficiais utilizadas são dependências de infraestrutura.
+A App oficial **Konaet** e a identidade `konaet[bot]` dependem de registro, instalação e validação real. O workflow **Verificar identidade real da App** faz essa validação depois da configuração. Os testes offline não a declaram executada.
 
-Fontes: [cadastro por parâmetros](https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-using-url-parameters), [tokens de GitHub App](https://github.com/actions/create-github-app-token), [configuração de Apps](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app).
+O pacote automatiza identidade e propostas. Modelos científicos e pesquisa neural continuam nos projetos [RealidadeQuantica](https://github.com/7dsolv/RealidadeQuantica) e [Konaet-IA](https://github.com/7dsolv/Konaet-IA). Contribuições antigas de `github-actions[bot]` permanecem no histórico dos respectivos projetos.
+
+Fontes do pacote em MATLAB e configurações YAML/JSON, sem fontes HTML, JavaScript ou Python. As Actions oficiais são dependências de infraestrutura. [Licença](LICENSE) · [Segurança](SECURITY.md) · [Mudanças](CHANGELOG.md).

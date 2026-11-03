@@ -15,7 +15,10 @@ proposal_names = {'no-change', 'new-proposal', 'delete-and-create', 'spaces', ..
     'path-magic', 'protected-branch', 'workflow-file', 'wrong-origin', ...
     'stale-branch', 'existing-pr', 'recover-after-api-failure', ...
     'concurrent-pr', 'literal-inputs', 'unexpected-pr-url', 'push-race', ...
-    'empty-allowlist', 'wrong-push-url', 'newline-filename', 'unchanged-remote'};
+    'empty-allowlist', 'wrong-push-url', 'newline-filename', 'unchanged-remote', ...
+    'rename-within', 'rename-from-outside', 'hook-stages-outside', ...
+    'author-environment', 'remote-outside-allowlist', 'recovery-outside-allowlist', ...
+    'glob-path', 'merged-remote'};
 for i = 1:numel(identity_names)
     name = identity_names{i};
     cases(end+1) = evaluate(name, 'identity-offline', @() identity_case(root, name)); %#ok<AGROW>
@@ -92,7 +95,6 @@ setenv('BASE_BRANCH', 'main'); setenv('DEFAULT_BRANCH', 'main');
 setenv('SERVER_URL', 'https://github.com');
 setenv('PR_TITLE', 'Atualizar dados'); setenv('PR_BODY', 'Revisar os dados gerados.');
 setenv('COMMIT_MESSAGE', 'Atualizar dados para revisao');
-base = git(f, 'rev-parse main');
 write_text(fullfile(f.work, 'data', 'value.txt'), 'updated');
 expected_failure = false;
 switch name
@@ -101,6 +103,35 @@ switch name
     case 'unchanged-remote'
         git(f, 'checkout -- data/value.txt');
         git(f, 'push origin HEAD:refs/heads/konaet/updates');
+    case 'merged-remote'
+        git(f, 'checkout -- data/value.txt'); seed_proposal(f);
+        prior = remote_head(f, 'konaet/updates');
+        git(f, 'switch main'); git(f, 'merge --no-ff konaet/updates -m merge');
+        git(f, 'push origin main');
+    case 'glob-path'
+        setenv('ALLOW_PATHS', 'data/*'); expected_failure = true;
+    case 'rename-within'
+        git(f, 'checkout -- data/value.txt');
+        git(f, 'mv data/value.txt data/renamed.txt');
+    case 'rename-from-outside'
+        git(f, 'mv fixture-source.txt data/imported.txt'); expected_failure = true;
+    case 'hook-stages-outside'
+        hook_path = fullfile(f.work, '.git', 'hooks', 'pre-commit');
+        write_text(hook_path, sprintf('#!/bin/sh\nprintf outside > hook-outside.txt\ngit add hook-outside.txt\n'));
+        cmd(['chmod 700 ' q(hook_path)]); expected_failure = true;
+    case 'author-environment'
+        setenv('GIT_AUTHOR_NAME', 'Unexpected'); setenv('GIT_AUTHOR_EMAIL', 'unexpected@example.invalid');
+        setenv('GIT_COMMITTER_NAME', 'Unexpected'); setenv('GIT_COMMITTER_EMAIL', 'unexpected@example.invalid');
+    case {'remote-outside-allowlist', 'recovery-outside-allowlist'}
+        git(f, 'checkout -- data/value.txt'); seed_proposal(f);
+        write_text(fullfile(f.work, 'remote-outside.txt'), 'outside');
+        git(f, 'add remote-outside.txt'); git(f, 'commit -m outside');
+        git(f, 'push origin HEAD:refs/heads/konaet/updates');
+        prior = remote_head(f, 'konaet/updates');
+        if strcmp(name, 'remote-outside-allowlist')
+            write_text(fullfile(f.work, 'data', 'value.txt'), 'third-update');
+        end
+        expected_failure = true;
     case 'empty-allowlist'
         setenv('ALLOW_PATHS', ''); expected_failure = true;
     case 'wrong-push-url'
@@ -167,6 +198,7 @@ switch name
         write_text(fullfile(f.work, 'data', 'value.txt'), 'racing-change');
         expected_failure = true;
 end
+base = bare_git(f, 'rev-parse refs/heads/main');
 [status, log] = execute(f, script);
 if strcmp(name, 'recover-after-api-failure')
     assert(status ~= 0 && ~isempty(remote_head(f, 'konaet/updates')), 'Falha da API nao exercitou push parcial.');
@@ -181,15 +213,17 @@ else
     assert(status == 0, 'Proposta falhou: %s', log);
 end
 assert(strcmp(base, bare_git(f, 'rev-parse refs/heads/main')), 'Branch base foi alterada.');
-if ismember(name, {'no-change', 'unchanged-remote'})
+if ismember(name, {'no-change', 'unchanged-remote', 'merged-remote'})
     if strcmp(name, 'no-change')
         assert(isempty(remote_head(f, 'konaet/updates')));
-    else
+    elseif strcmp(name, 'unchanged-remote')
         assert(strcmp(base, remote_head(f, 'konaet/updates')));
+    else
+        assert(strcmp(prior, remote_head(f, 'konaet/updates')));
     end
     assert(contains(fileread(f.output), 'changed=false'));
     assert(~isfile(fullfile(f.mock, 'gh.log')), 'Sem mudancas nao deveria chamar API.');
-elseif strcmp(name, 'stale-branch')
+elseif ismember(name, {'stale-branch', 'remote-outside-allowlist', 'recovery-outside-allowlist'})
     assert(strcmp(prior, remote_head(f, 'konaet/updates')), 'Branch divergente foi sobrescrita.');
 elseif strcmp(name, 'push-race')
     assert(strcmp(other, remote_head(f, 'konaet/updates')), 'Push sobrescreveu o commit concorrente.');
@@ -204,6 +238,7 @@ else
     assert(strcmp(bare_git(f, 'show -s --format=%an refs/heads/konaet/updates'), 'konaet[bot]'));
     assert(strcmp(bare_git(f, 'show -s --format=%ae refs/heads/konaet/updates'), ...
         '1234+konaet[bot]@users.noreply.github.com'));
+    assert(strcmp(bare_git(f, 'show -s --format=%cn refs/heads/konaet/updates'), 'konaet[bot]'));
     switch name
         case 'existing-pr'
             assert(~strcmp(prior, remote_head(f, 'konaet/updates')));
@@ -215,6 +250,8 @@ else
             assert(strcmp(bare_git(f, 'show refs/heads/konaet/updates:data/new.txt'), 'new'));
         case 'spaces'
             assert(strcmp(bare_git(f, ['show ' q('refs/heads/konaet/updates:data/novo arquivo.txt')]), 'spaces'));
+        case 'rename-within'
+            assert(strcmp(bare_git(f, 'show refs/heads/konaet/updates:data/renamed.txt'), 'base'));
         case 'literal-inputs'
             assert(~isfile(sentinel), 'Entrada textual executou um comando.');
             assert(strcmp(fileread(fullfile(f.mock, 'title')), title));
@@ -244,14 +281,16 @@ f.work = fullfile(f.folder, 'work'); f.mock = fullfile(f.folder, 'mock');
 mkdir(f.mock); f.output = fullfile(f.folder, 'outputs');
 names = {'PATH','GH_TOKEN','GH_HOST','GITHUB_REPOSITORY','GITHUB_OUTPUT', ...
     'MOCK_DIR','APP_SLUG','EXPECTED_SLUG','BOT_LOGIN','BOT_ID','ALLOW_PATHS', ...
-    'PROPOSAL_BRANCH','BASE_BRANCH','DEFAULT_BRANCH','SERVER_URL','PR_TITLE','PR_BODY','COMMIT_MESSAGE'};
+    'PROPOSAL_BRANCH','BASE_BRANCH','DEFAULT_BRANCH','SERVER_URL','PR_TITLE','PR_BODY','COMMIT_MESSAGE', ...
+    'GIT_AUTHOR_NAME','GIT_AUTHOR_EMAIL','GIT_COMMITTER_NAME','GIT_COMMITTER_EMAIL'};
 old = cellfun(@getenv, names, UniformOutput=false);
 guard = onCleanup(@() cleanup_fixture(f.folder, names, old));
 cmd(['git init --bare --initial-branch=main ' q(f.remote)]);
 cmd(['git clone ' q(f.remote) ' ' q(f.work)]);
 git(f, 'config user.name Fixture'); git(f, 'config user.email fixture@example.invalid');
 mkdir(fullfile(f.work, 'data')); write_text(fullfile(f.work, 'data', 'value.txt'), 'base');
-git(f, 'add data/value.txt'); git(f, 'commit -m base'); git(f, 'push -u origin main');
+write_text(fullfile(f.work, 'fixture-source.txt'), 'source');
+git(f, 'add data/value.txt fixture-source.txt'); git(f, 'commit -m base'); git(f, 'push -u origin main');
 git(f, ['config ' q(['url.' f.remote '.insteadOf']) ' https://github.com/konaet-tests/fixture.git']);
 git(f, 'remote set-url origin https://github.com/konaet-tests/fixture.git');
 write_text(fullfile(f.mock, 'gh'), mock_gh());

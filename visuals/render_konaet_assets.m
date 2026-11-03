@@ -16,8 +16,8 @@ end
 label(ax, 80, 724, 'KONAET / ENGINEERING AUTOMATION', 12, C.muted, 'normal');
 label(ax, 80, 580, 'KONAET', 70, C.white, 'bold');
 label(ax, 84, 488, 'BOT', 70, C.lime, 'bold');
-label(ax, 84, 365, 'Identidade verificavel.', 26, C.white, 'bold');
-label(ax, 84, 309, 'Mudancas revisaveis.', 26, C.white, 'bold');
+label(ax, 84, 365, 'Identidade verificável.', 26, C.white, 'bold');
+label(ax, 84, 309, 'Mudanças revisáveis.', 26, C.white, 'bold');
 label(ax, 84, 238, 'Do token limitado ao diff que o mantenedor pode revisar.', 13, C.muted, 'normal');
 emblem(ax, 1165, 430, 160, C);
 angles = linspace(0, 2*pi, 220);
@@ -28,7 +28,7 @@ end
 dot(ax, 1165+255*cos(0.6), 430+0.83*255*sin(0.6), 8, C.lime);
 dot(ax, 1165+215*cos(3.5), 430+0.83*215*sin(3.5), 6, C.copper);
 label(ax, 1002, 690, 'APP  /  DIFF  /  REVIEW', 11, C.muted, 'normal');
-chips = {'ESCOPO DO REPOSITORIO', 'DIFF PERMITIDO', 'REVISAO HUMANA'};
+chips = {'ESCOPO DO REPOSITÓRIO', 'DIFF PERMITIDO', 'REVISÃO HUMANA'};
 for i = 1:3
     x = 84 + (i-1)*500;
     line(ax, [x x+428], [125 125], Color=C.line, LineWidth=1.1);
@@ -40,22 +40,22 @@ close(f); clear guard;
 
 [f, ax] = canvas(1600, 860, C);
 guard = onCleanup(@() close_figure(f));
-label(ax, 70, 800, 'A anatomia de uma mudanca revisavel', 30, C.white, 'bold');
-label(ax, 70, 749, 'Identidade, dados e decisao humana atravessam fronteiras diferentes.', 15, C.muted, 'normal');
+label(ax, 70, 800, 'A anatomia de uma mudança revisável', 30, C.white, 'bold');
+label(ax, 70, 749, 'Identidade, dados e decisão humana atravessam fronteiras diferentes.', 15, C.muted, 'normal');
 xs = [70 610 1150]; widths = [380 410 380];
-headers = {'01 / GITHUB APP', '02 / RUNNER DO PROJETO', '03 / REPOSITORIO'};
+headers = {'01 / GITHUB APP', '02 / RUNNER DO PROJETO', '03 / REPOSITÓRIO'};
 for i = 1:3
     card(ax, xs(i), 177, widths(i), 520, C.panel, C.line);
     label(ax, xs(i)+22, 658, headers{i}, 12, C.muted, 'bold');
 end
 node(ax, 95, 516, 330, 80, 'CHAVE DA APP', 'Actions Secret do mantenedor', C.violet, C);
-node(ax, 95, 366, 330, 80, 'TOKEN TEMPORARIO', 'Escopo: somente este repositorio', C.violet, C);
+node(ax, 95, 366, 330, 80, 'TOKEN TEMPORÁRIO', 'Escopo: somente este repositório', C.violet, C);
 node(ax, 95, 220, 330, 80, 'IDENTIDADE CONFERIDA', 'Slug + ID + tipo Bot pela API', C.violet, C);
 connector(ax, [260 260], [516 446], C.violet);
 connector(ax, [260 260], [366 300], C.violet);
-node(ax, 638, 516, 354, 80, 'GERADOR DO PROJETO', 'MATLAB, relatorios ou outros dados', C.lime, C);
+node(ax, 638, 516, 354, 80, 'GERADOR DO PROJETO', 'MATLAB, relatórios ou outros dados', C.lime, C);
 node(ax, 638, 366, 354, 80, 'DIFF PERMITIDO', 'Lista literal; workflows recusados', C.lime, C);
-node(ax, 638, 220, 354, 80, 'COMMIT + PUSH', 'Avanco normal; sem sobrescrever refs', C.lime, C);
+node(ax, 638, 220, 354, 80, 'COMMIT + PUSH', 'Avanço normal; sem sobrescrever refs', C.lime, C);
 connector(ax, [815 815], [516 446], C.lime);
 connector(ax, [815 815], [366 300], C.lime);
 node(ax, 1175, 516, 330, 80, 'BRANCH DE PROPOSTA', 'Branch base protegida pelo contrato', C.copper, C);
@@ -67,8 +67,8 @@ connector(ax, [425 505 505 638], [406 406 260 260], C.violet);
 label(ax, 463, 465, 'token', 11, C.violet, 'bold');
 connector(ax, [992 1080 1080 1175], [260 260 556 556], C.lime);
 label(ax, 1040, 609, 'diff', 11, C.lime, 'bold');
-label(ax, 70, 112, sprintf('%d/%d cenarios offline aprovados | Git local real | API gh substituida por fixture', report.passed, report.total), 13, C.white, 'bold');
-label(ax, 70, 68, 'App real: NOT_RUN no relatorio de teste. A instalacao e a autenticacao sao verificadas em workflow separado.', 11, C.muted, 'normal');
+label(ax, 70, 112, sprintf('%d/%d cenários offline aprovados | Git local real | API gh substituída por fixture', report.passed, report.total), 13, C.white, 'bold');
+label(ax, 70, 68, 'App real: NOT_RUN no relatório de teste. A instalação e a autenticação são verificadas em workflow separado.', 11, C.muted, 'normal');
 exportgraphics(ax, fullfile(output_dir, 'konaet-architecture.png'), Resolution=110, BackgroundColor=C.bg);
 exportgraphics(ax, fullfile(output_dir, 'konaet-architecture.svg'), BackgroundColor=C.bg);
 close(f); clear guard;
@@ -85,19 +85,19 @@ frame_count = 48;
 [palette, lookup] = palette_map();
 [f, ax] = canvas(1160, 620, C);
 guard = onCleanup(@() close_figure(f));
-titles = {'APP', 'IDENTIDADE', 'DIFF', 'PUSH', 'REVISAO'};
+titles = {'APP', 'IDENTIDADE', 'DIFF', 'PUSH', 'REVISÃO'};
 subtitles = {'Token limitado', 'Slug / ID / Bot', 'Somente paths', 'Sem force push', 'Criar ou atualizar PR'};
-details = {'O segredo gera um token temporario para um repositorio.', ...
+details = {'O segredo gera um token temporário para um repositório.', ...
     'A API precisa confirmar o login e o tipo de conta Bot.', ...
-    'Um arquivo inesperado interrompe a proposta antes do commit.', ...
-    'Uma branch que avancou nao e substituida pela automacao.', ...
+    'O diff completo da proposta precisa respeitar os caminhos permitidos.', ...
+    'Uma branch que avançou não é substituída pela automação.', ...
     'Falha depois do push pode ser recuperada sem outro commit.'};
 for frame = 1:frame_count
     cla(ax); hold(ax, 'on');
     progress = (frame-1)/frame_count;
     stage = min(5, floor(progress*5)+1);
     label(ax, 56, 558, 'KONAET / FLOW TRACE', 20, C.white, 'bold');
-    label(ax, 56, 514, 'Demonstracao do protocolo de proposta', 13, C.muted, 'normal');
+    label(ax, 56, 514, 'Demonstração do protocolo de proposta', 13, C.muted, 'normal');
     emblem(ax, 1050, 543, 35, C);
     centers = 142:218:1014;
     plot(ax, [centers(1) centers(end)], [360 360], Color=C.line, LineWidth=2);
@@ -121,8 +121,8 @@ for frame = 1:frame_count
     card(ax, 56, 69, 1048, 165, C.panel, C.line);
     label(ax, 80, 195, sprintf('ETAPA %02d / %s', stage, titles{stage}), 12, C.copper, 'bold');
     label(ax, 80, 155, details{stage}, 14, C.white, 'normal');
-    label(ax, 80, 107, sprintf('%d/%d cenarios offline aprovados  |  App real: NOT_RUN', report.passed, report.total), 11, C.muted, 'normal');
-    label(ax, 56, 33, 'FLUXO ILUSTRADO / NAO E TELEMETRIA AO VIVO / GERADO EM MATLAB', 9, C.muted, 'normal');
+    label(ax, 80, 107, sprintf('%d/%d cenários offline aprovados  |  App real: NOT_RUN', report.passed, report.total), 11, C.muted, 'normal');
+    label(ax, 56, 33, 'FLUXO ILUSTRADO / NÃO É TELEMETRIA AO VIVO / GERADO EM MATLAB', 9, C.muted, 'normal');
     drawnow;
     exportgraphics(ax, frame_file, Resolution=95, BackgroundColor=C.bg);
     rgb = imread(frame_file);
