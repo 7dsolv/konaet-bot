@@ -7,7 +7,7 @@ if nargin < 2, output_dir = fullfile(root, 'artifacts'); end
 assert(isunix, 'Os testes de infraestrutura exigem Linux com Bash e Git.');
 if ~isfolder(output_dir), mkdir(output_dir); end
 started = tic;
-cases = struct('name', {}, 'group', {}, 'passed', {}, 'seconds', {}, 'error', {});
+cases = struct('name', {}, 'group', {}, 'passed', {}, 'seconds', {}, 'error', {}, 'error_id', {});
 identity_names = {'valid-bot', 'wrong-slug', 'empty-slug', 'invalid-id', ...
     'wrong-login', 'user-is-not-bot', 'api-failure'};
 proposal_names = {'no-change', 'new-proposal', 'delete-and-create', 'spaces', ...
@@ -22,16 +22,22 @@ proposal_names = {'no-change', 'new-proposal', 'delete-and-create', 'spaces', ..
 for i = 1:numel(identity_names)
     name = identity_names{i};
     cases(end+1) = evaluate(name, 'identity-offline', @() identity_case(root, name)); %#ok<AGROW>
+    if strcmp(cases(end).error_id, 'Konaet:FixtureTimeout'), break; end
 end
-for i = 1:numel(proposal_names)
-    name = proposal_names{i};
-    cases(end+1) = evaluate(name, 'git-integration-offline', @() proposal_case(root, name)); %#ok<AGROW>
+if ~any(strcmp({cases.error_id}, 'Konaet:FixtureTimeout'))
+    for i = 1:numel(proposal_names)
+        name = proposal_names{i};
+        cases(end+1) = evaluate(name, 'git-integration-offline', @() proposal_case(root, name)); %#ok<AGROW>
+        if strcmp(cases(end).error_id, 'Konaet:FixtureTimeout'), break; end
+    end
 end
 cases(end+1) = evaluate('registration-contract', 'matlab', @() registration_case(root));
 report.schema_version = 1;
 report.revision = getenv('GITHUB_SHA');
 report.mode = 'offline-contract-and-real-local-git';
 report.total = numel(cases);
+report.planned = numel(identity_names) + numel(proposal_names) + 1;
+report.complete = report.total == report.planned;
 report.passed = sum([cases.passed]);
 report.failed = report.total - report.passed;
 report.seconds = toc(started);
@@ -47,13 +53,14 @@ end
 
 function item = evaluate(name, group, callback)
 timer = tic;
-item = struct('name', name, 'group', group, 'passed', false, 'seconds', 0, 'error', '');
+item = struct('name', name, 'group', group, 'passed', false, 'seconds', 0, 'error', '', 'error_id', '');
 try
     callback();
     item.passed = true;
     fprintf('[PASS] %s / %s\n', group, name);
 catch problem
     item.error = problem.message;
+    item.error_id = problem.identifier;
     fprintf('[FAIL] %s / %s: %s\n', group, name, problem.message);
 end
 item.seconds = toc(timer);
@@ -282,13 +289,15 @@ mkdir(f.mock); f.output = fullfile(f.folder, 'outputs');
 names = {'PATH','GH_TOKEN','GH_HOST','GITHUB_REPOSITORY','GITHUB_OUTPUT', ...
     'MOCK_DIR','APP_SLUG','EXPECTED_SLUG','BOT_LOGIN','BOT_ID','ALLOW_PATHS', ...
     'PROPOSAL_BRANCH','BASE_BRANCH','DEFAULT_BRANCH','SERVER_URL','PR_TITLE','PR_BODY','COMMIT_MESSAGE', ...
-    'GIT_AUTHOR_NAME','GIT_AUTHOR_EMAIL','GIT_COMMITTER_NAME','GIT_COMMITTER_EMAIL'};
+    'GIT_AUTHOR_NAME','GIT_AUTHOR_EMAIL','GIT_COMMITTER_NAME','GIT_COMMITTER_EMAIL', ...
+    'GIT_TERMINAL_PROMPT','BASH_ENV'};
 old = cellfun(@getenv, names, UniformOutput=false);
 guard = onCleanup(@() cleanup_fixture(f.folder, names, old));
 % Um valor vazio restaurado por setenv ainda pode existir no ambiente do Git.
 % O repositorio fixture sempre comeca com uma identidade explicita e isolada.
 setenv('GIT_AUTHOR_NAME', 'Fixture'); setenv('GIT_AUTHOR_EMAIL', 'fixture@example.invalid');
 setenv('GIT_COMMITTER_NAME', 'Fixture'); setenv('GIT_COMMITTER_EMAIL', 'fixture@example.invalid');
+setenv('GIT_TERMINAL_PROMPT', '0'); setenv('BASH_ENV', '');
 cmd(['git init --bare --initial-branch=main ' q(f.remote)]);
 cmd(['git clone ' q(f.remote) ' ' q(f.work)]);
 git(f, 'config user.name Fixture'); git(f, 'config user.email fixture@example.invalid');
@@ -315,7 +324,11 @@ end
 function [status, log] = execute(f, script)
 write_text(fullfile(f.folder, 'step.bash'), script);
 if isfile(f.output), delete(f.output); end
-[status, log] = system(['cd ' q(f.work) ' && bash ' q(fullfile(f.folder, 'step.bash')) ' 2>&1']);
+[status, log] = system(['cd ' q(f.work) ' && timeout --kill-after=5s 30s bash -x ' q(fullfile(f.folder, 'step.bash')) ' 2>&1']);
+if ismember(status, [124 137])
+    tail = log(max(1,end-6000):end);
+    error('Konaet:FixtureTimeout', 'Script local excedeu 30 s. Ultimo trace:\n%s', tail);
+end
 end
 
 function script = extract_script(path, id)
@@ -355,7 +368,7 @@ if status == 0, sha = strtrim(value); else, sha = ''; end
 end
 
 function value = cmd(command)
-[status, value] = system([command ' 2>&1']);
+[status, value] = system(['timeout --kill-after=5s 20s ' command ' 2>&1']);
 assert(status == 0, 'Comando falhou: %s\n%s', command, value);
 value = strtrim(value);
 end
