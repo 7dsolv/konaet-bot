@@ -15,7 +15,7 @@ A suíte está em [`tests/run_konaet_tests.m`](../tests/run_konaet_tests.m). Ela
 
 Os remotos são repositórios Git bare em diretórios temporários. O comando `gh` é um fixture local que registra chamadas e produz respostas controladas. Os testes não usam credenciais nem fazem chamadas ao GitHub. Cada cenário registra resultado e duração no [relatório da vitrine](../assets/test-report.json); a revisão testada fica no campo `revision`.
 
-O CI também executa actionlint/ShellCheck e verifica a configuração JSON. O renderer verifica a quantidade e o tamanho uniforme dos quadros do GIF e impõe orçamento de 8 MiB para a animação.
+O CI também executa o módulo composite diretamente no runner, com outro remoto bare local e API de teste, para conferir entradas e saídas da integração do GitHub Actions. Essa checagem é independente da chamada de subprocessos pelo MATLAB. Actionlint/ShellCheck verificam os workflows e o contrato JSON é conferido. O renderer verifica a quantidade e o tamanho uniforme dos quadros do GIF e impõe orçamento de 8 MiB para a animação.
 
 ## Verificação real separada
 

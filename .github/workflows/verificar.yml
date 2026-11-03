@@ -10,6 +10,60 @@ permissions:
   contents: read
 
 jobs:
+  composite-smoke-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Preparar remoto Git local e API de teste
+        run: |
+          set -euo pipefail
+          bare="$RUNNER_TEMP/konaet-smoke.git"
+          git clone --bare . "$bare"
+          git --git-dir="$bare" update-ref refs/heads/main HEAD
+          raw="$(git config --get remote.origin.url)"
+          git config "url.${bare}.insteadOf" "$raw"
+          mock="$RUNNER_TEMP/konaet-mock"
+          mkdir -p "$mock" state
+          cat > "$mock/gh" <<'MOCK'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          case "$1 $2" in
+            'pr list') exit 0 ;;
+            'pr create') printf 'https://github.com/%s/pull/23\n' "$GITHUB_REPOSITORY" ;;
+            *) exit 90 ;;
+          esac
+          MOCK
+          chmod 700 "$mock/gh"
+          echo "$mock" >> "$GITHUB_PATH"
+          printf 'Composite offline smoke\n' > state/konaet-smoke.txt
+          git rev-parse HEAD > "$RUNNER_TEMP/konaet-smoke-base"
+      - name: Executar o composite com Git real e API de teste
+        uses: ./propose
+        id: smoke
+        with:
+          token: offline-fixture-not-a-token
+          bot-login: fixture[bot]
+          bot-id: '1234'
+          paths: state/konaet-smoke.txt
+          branch: konaet/smoke
+          base: main
+      - name: Conferir o efeito no remoto local
+        env:
+          CHANGED: ${{ steps.smoke.outputs.changed }}
+          PROPOSAL_URL: ${{ steps.smoke.outputs.pr-url }}
+        run: |
+          set -euo pipefail
+          [ "$CHANGED" = true ]
+          [ "$PROPOSAL_URL" = "https://github.com/$GITHUB_REPOSITORY/pull/23" ]
+          bare="$RUNNER_TEMP/konaet-smoke.git"
+          [ "$(git --git-dir="$bare" rev-parse refs/heads/main)" = "$(cat "$RUNNER_TEMP/konaet-smoke-base")" ]
+          git --git-dir="$bare" show refs/heads/konaet/smoke:state/konaet-smoke.txt
+          echo 'Composite offline aprovado: Git local real, API substituida e nenhuma App autenticada.' >> "$GITHUB_STEP_SUMMARY"
+
   configuracao:
     runs-on: ubuntu-latest
     steps:
