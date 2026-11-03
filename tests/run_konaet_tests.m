@@ -361,11 +361,11 @@ s = regexprep(s, '^\s+', '');
 end
 
 function result = git(f, args)
-result = cmd(['git -C ' q(f.work) ' ' args]);
+result = cmd(['git --no-pager -C ' q(f.work) ' ' args]);
 end
 
 function result = bare_git(f, args)
-result = cmd(['git --git-dir=' q(f.remote) ' ' args]);
+result = cmd(['git --no-pager --git-dir=' q(f.remote) ' ' args]);
 end
 
 function sha = remote_head(f, branch)
