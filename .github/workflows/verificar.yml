@@ -103,9 +103,15 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - name: Desenhar a vitrine em MATLAB
+        if: github.event_name == 'workflow_dispatch'
         uses: matlab-actions/run-command@v3
         with:
           command: r = jsondecode(fileread(fullfile('artifacts','test-report.json'))); addpath('visuals'); render_konaet_assets(fullfile(pwd,'artifacts','showcase'),r);
+      - name: Verificar as midias publicadas
+        if: github.event_name != 'workflow_dispatch'
+        uses: matlab-actions/run-command@v3
+        with:
+          command: addpath('visuals'); verify_konaet_assets(fullfile(pwd,'assets'));
       - name: Mostrar o alcance da verificacao
         run: |
           jq -r '"Konaet: \(.passed)/\(.total) cenarios offline aprovados.\n\nApp real: \(.live_app.status).\n\nA suite usa Git local real e API gh de teste. Veja os relatorios e os visuais nos artifacts."' artifacts/test-report.json >> "$GITHUB_STEP_SUMMARY"
@@ -114,6 +120,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: konaet-evidence-and-showcase
-          path: artifacts/
+          path: |
+            artifacts/
+            assets/
           if-no-files-found: warn
           retention-days: 14

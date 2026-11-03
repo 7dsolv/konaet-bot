@@ -127,6 +127,7 @@ switch name
     case 'cancelled-staging'
         git(f, 'checkout -- data/value.txt');
         git(f, 'rm data/value.txt');
+        mkdir(fullfile(f.work, 'data'));
         write_text(fullfile(f.work, 'data', 'value.txt'), 'base');
     case 'rename-from-outside'
         git(f, 'mv fixture-source.txt data/imported.txt'); expected_failure = true;
