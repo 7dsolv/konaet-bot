@@ -36,4 +36,4 @@ jobs:
           BOT_LOGIN: ${{ steps.konaet.outputs.bot-login }}
           BOT_ID: ${{ steps.konaet.outputs.bot-id }}
         run: |
-          printf 'App autenticada: `%s` (ID `%s`).\n' "$BOT_LOGIN" "$BOT_ID" >> "$GITHUB_STEP_SUMMARY"
+          printf 'App autenticada: %s (ID %s).\n' "$BOT_LOGIN" "$BOT_ID" >> "$GITHUB_STEP_SUMMARY"
