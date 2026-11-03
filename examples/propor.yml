@@ -1,0 +1,50 @@
+name: Konaet - proposta para revisao
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  propor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Autenticar a App Konaet
+        id: konaet
+        uses: 7dsolv/konaet-bot@v1.0.0
+        with:
+          client-id: ${{ vars.KONAET_APP_CLIENT_ID }}
+          private-key: ${{ secrets.KONAET_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ steps.konaet.outputs.token }}
+
+      - name: Criar commit e abrir proposta
+        env:
+          GH_TOKEN: ${{ steps.konaet.outputs.token }}
+          BOT_LOGIN: ${{ steps.konaet.outputs.bot-login }}
+          BOT_EMAIL: ${{ steps.konaet.outputs.bot-email }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          PROPOSAL_BRANCH: konaet/estado-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git switch -c "$PROPOSAL_BRANCH"
+          mkdir -p state
+          date -u '+Konaet: ultima execucao em %Y-%m-%dT%H:%M:%SZ' > state/konaet-status.txt
+          git config user.name "$BOT_LOGIN"
+          git config user.email "$BOT_EMAIL"
+          git add -- state/konaet-status.txt
+          git commit -m 'Konaet: propor atualizacao de estado [skip ci]'
+          git push origin "HEAD:${PROPOSAL_BRANCH}"
+          body_file="$(mktemp)"
+          cat > "$body_file" <<'BODY'
+          Atualiza o registro de execucao da automacao Konaet.
+
+          Este arquivo demonstra o caminho App autenticada -> commit -> push -> proposta.
+          A proposta fica aberta para revisao; o workflow nao faz merge.
+          BODY
+          gh pr create --repo "$GITHUB_REPOSITORY" --base "$DEFAULT_BRANCH" \
+            --head "$PROPOSAL_BRANCH" --title 'Konaet: atualizar estado de automacao' \
+            --body-file "$body_file"

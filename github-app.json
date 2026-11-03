@@ -1,0 +1,15 @@
+{
+  "name": "Konaet",
+  "description": "Automacao Konaet com identidade propria, commits e propostas para revisao humana.",
+  "url": "https://github.com/7dsolv/konaet-bot",
+  "public": true,
+  "hook_attributes": {
+    "active": false,
+    "url": "https://github.com/7dsolv/konaet-bot"
+  },
+  "default_permissions": {
+    "contents": "write",
+    "pull_requests": "write"
+  },
+  "default_events": []
+}

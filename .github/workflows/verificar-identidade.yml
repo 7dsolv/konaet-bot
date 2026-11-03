@@ -1,0 +1,39 @@
+name: Verificar identidade real da App
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  identidade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Conferir configuracao antes de autenticar
+        env:
+          APP_CLIENT_ID: ${{ vars.KONAET_APP_CLIENT_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.KONAET_APP_PRIVATE_KEY }}
+        run: |
+          if [ -z "$APP_CLIENT_ID" ] || [ -z "$APP_PRIVATE_KEY" ]; then
+            echo '::error::Cadastre e instale a App; configure KONAET_APP_CLIENT_ID e KONAET_APP_PRIVATE_KEY.'
+            exit 1
+          fi
+
+      - name: Resolver a identidade real
+        uses: ./
+        id: konaet
+        with:
+          client-id: ${{ vars.KONAET_APP_CLIENT_ID }}
+          private-key: ${{ secrets.KONAET_APP_PRIVATE_KEY }}
+
+      - name: Registrar o resultado sem publicar conteudo
+        env:
+          BOT_LOGIN: ${{ steps.konaet.outputs.bot-login }}
+          BOT_ID: ${{ steps.konaet.outputs.bot-id }}
+        run: |
+          printf 'App autenticada: `%s` (ID `%s`).\n' "$BOT_LOGIN" "$BOT_ID" >> "$GITHUB_STEP_SUMMARY"
