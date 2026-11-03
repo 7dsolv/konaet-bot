@@ -1,6 +1,6 @@
 {
   "generator": "visuals/render_konaet_assets.m",
-  "revision": "48c32ef033788bb527e85242dc95ffd04179858d",
+  "revision": "25cde3e41502023ea2c5c78730bc153bbdce2f96",
   "test_mode": "offline-contract-and-real-local-git",
   "test_passed": 40,
   "test_total": 40,
@@ -9,8 +9,15 @@
     "delay_seconds": 0.12,
     "width": 1535,
     "height": 823,
-    "bytes": 1.474914E+6,
+    "bytes": 1.829956E+6,
     "live_telemetry": false
   },
-  "real_app_status": "NOT_RUN"
+  "real_app_status": "NOT_RUN",
+  "brand": {
+    "name": "KONAET",
+    "source_url": "https://github.com/7dsolv/konaet-cover/blob/0cb13e8f7d40ded41cabd47512860c5cf8ec2687/docs/store-listing/graphics/icon-512.png",
+    "source_revision": "0cb13e8f7d40ded41cabd47512860c5cf8ec2687",
+    "source_sha256": "34db9b402582e553ae22a2a8b07748efe949b2976964f7577a65d8f768849bec",
+    "icon_preserves_source_bytes": true
+  }
 }
