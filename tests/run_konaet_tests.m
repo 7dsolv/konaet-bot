@@ -54,6 +54,7 @@ end
 function item = evaluate(name, group, callback)
 timer = tic;
 item = struct('name', name, 'group', group, 'passed', false, 'seconds', 0, 'error', '', 'error_id', '');
+fprintf('[START] %s / %s\n', group, name);
 try
     callback();
     item.passed = true;
@@ -324,7 +325,12 @@ end
 function [status, log] = execute(f, script)
 write_text(fullfile(f.folder, 'step.bash'), script);
 if isfile(f.output), delete(f.output); end
-[status, log] = system(['cd ' q(f.work) ' && timeout --kill-after=5s 30s bash -x ' q(fullfile(f.folder, 'step.bash')) ' 2>&1']);
+trace_path = fullfile(f.folder, 'step-trace.log');
+% Descendentes nao podem manter aberto o pipe de captura do processo MATLAB.
+% O trace vai para arquivo e comandos nao interativos recebem stdin fechado.
+[status, ~] = system(['cd ' q(f.work) ' && timeout --kill-after=5s 30s bash -x ' ...
+    q(fullfile(f.folder, 'step.bash')) ' > ' q(trace_path) ' 2>&1 < /dev/null']);
+if isfile(trace_path), log = fileread(trace_path); else, log = ''; end
 if ismember(status, [124 137])
     tail = log(max(1,end-6000):end);
     error('Konaet:FixtureTimeout', 'Script local excedeu 30 s. Ultimo trace:\n%s', tail);
@@ -369,6 +375,9 @@ end
 
 function value = cmd(command)
 [status, value] = system(['timeout --kill-after=5s 20s ' command ' 2>&1']);
+if ismember(status, [124 137])
+    error('Konaet:FixtureTimeout', 'Comando fixture excedeu 20 s: %s\n%s', command, value);
+end
 assert(status == 0, 'Comando falhou: %s\n%s', command, value);
 value = strtrim(value);
 end
