@@ -23,7 +23,9 @@ O arquivo [`github-app.json`](github-app.json) registra a configuração na raiz
 
 ## Commit, push e proposta para aprovação
 
-Copie [`examples/propor.yml`](examples/propor.yml) para `.github/workflows/konaet-propor.yml` no projeto de destino. Depois de configurar a App, execute o workflow manualmente. Ele cria uma branch, grava um estado de execução, faz commit como o bot autenticado e abre uma pull request para revisão. O merge é decisão do mantenedor.
+Neste repositório, o workflow **Konaet - commit e proposta para revisao** já está disponível na aba Actions. Depois de configurar a App, execute-o manualmente. Ele cria uma branch, grava um estado de execução, faz commit como o bot autenticado e abre uma pull request para revisão. O merge é decisão do mantenedor.
+
+Para usar em outro projeto, copie [`.github/workflows/propor.yml`](.github/workflows/propor.yml) para a pasta de workflows do destino e configure as credenciais da App daquele mantenedor.
 
 Para integrar a Action a um workflow próprio:
 

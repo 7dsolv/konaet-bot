@@ -1,4 +1,4 @@
-name: Konaet - proposta para revisao
+name: Konaet - commit e proposta para revisao
 
 on:
   workflow_dispatch:
