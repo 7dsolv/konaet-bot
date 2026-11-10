@@ -8,9 +8,9 @@ permissions:
 
 jobs:
   identidade:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
@@ -52,7 +52,7 @@ jobs:
             '{schema_version:1,status:"VERIFIED",authentication:"GitHub App installation token",source_revision:$revision,run_url:$run,bot_login:$login,bot_id:$id,installation_id:$installation,token_repositories:[$repo],fixture_used:false}' > artifacts/live-app.json
           printf 'App autenticada: %s (ID %s).\n' "$BOT_LOGIN" "$BOT_ID" >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: konaet-live-app-proof

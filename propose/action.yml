@@ -71,11 +71,26 @@ runs:
         [ "$PROPOSAL_BRANCH" != "$BASE_BRANCH" ] && [ "$PROPOSAL_BRANCH" != "$DEFAULT_BRANCH" ] || fail 'A proposta nao pode publicar na branch base/padrao.'
         [ -n "$PR_TITLE" ] && [ -n "$COMMIT_MESSAGE" ] || fail 'Titulo e mensagem sao obrigatorios.'
         cd "$(git rev-parse --show-toplevel)"
-        origin="$(git config --get remote.origin.url)"
         expected="https://github.com/${GITHUB_REPOSITORY}"
-        [ "$origin" = "$expected" ] || [ "$origin" = "${expected}.git" ] || fail 'Origin difere do repositorio do workflow.'
-        push_url="$(git config --get remote.origin.pushurl || true)"
-        [ -z "$push_url" ] || [ "$push_url" = "$expected" ] || [ "$push_url" = "${expected}.git" ] || fail 'Push URL difere do repositorio do workflow.'
+        validate_origin() {
+          local urls url count mode
+          for mode in fetch push; do
+            if [ "$mode" = push ]; then urls="$(git remote get-url --push --all origin)";
+            else urls="$(git remote get-url --all origin)"; fi
+            count=0
+            while IFS= read -r url; do
+              count=$((count+1))
+              [ "$url" = "$expected" ] || [ "$url" = "${expected}.git" ] || fail 'Destino efetivo do Git difere do repositorio autorizado.'
+            done <<< "$urls"
+            [ "$count" -eq 1 ] || fail 'Origin deve ter exatamente um destino de leitura e escrita.'
+          done
+        }
+        validate_origin
+        git_network() {
+          validate_origin
+          git -c http.https://github.com/.extraheader= -c credential.helper= \
+            -c 'credential.helper=!gh auth git-credential' "$@"
+        }
 
         allowed=()
         while IFS= read -r entry || [ -n "$entry" ]; do
@@ -113,7 +128,7 @@ runs:
           validate_files "${proposed[@]}"
         }
 
-        remote_sha="$(git ls-remote --heads origin "refs/heads/${PROPOSAL_BRANCH}" | cut -f1)"
+        remote_sha="$(git_network ls-remote --heads origin "refs/heads/${PROPOSAL_BRANCH}" | cut -f1)"
         if [ "${#changed[@]}" -gt 0 ]; then
           git diff --no-renames --name-only -z -- > "$temp_dir/diff"
           git ls-files --others --exclude-standard -z >> "$temp_dir/diff"
@@ -130,7 +145,7 @@ runs:
             printf 'changed=false\ncommit=\npr-url=\npr-number=\n' >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git fetch --no-tags origin "refs/heads/${PROPOSAL_BRANCH}:refs/remotes/origin/${PROPOSAL_BRANCH}" "refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          git_network fetch --no-tags origin "refs/heads/${PROPOSAL_BRANCH}:refs/remotes/origin/${PROPOSAL_BRANCH}" "refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
           remote_sha="$(git rev-parse "refs/remotes/origin/${PROPOSAL_BRANCH}")"
           validate_proposal "$remote_sha"
           if [ "${#proposed[@]}" -eq 0 ]; then
@@ -140,30 +155,51 @@ runs:
           commit_sha="$remote_sha"
         else
           if [ -n "$remote_sha" ]; then
-            git fetch --no-tags origin "refs/heads/${PROPOSAL_BRANCH}:refs/remotes/origin/${PROPOSAL_BRANCH}"
+            git_network fetch --no-tags origin "refs/heads/${PROPOSAL_BRANCH}:refs/remotes/origin/${PROPOSAL_BRANCH}"
             remote_sha="$(git rev-parse "refs/remotes/origin/${PROPOSAL_BRANCH}")"
             git merge-base --is-ancestor "$remote_sha" HEAD || fail 'A branch remota avancou; atualize o checkout antes de gerar o diff.'
           fi
-          git fetch --no-tags origin "refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          git_network fetch --no-tags origin "refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
           email="${BOT_ID}+${BOT_LOGIN}@users.noreply.github.com"
           GIT_AUTHOR_NAME="$BOT_LOGIN" GIT_AUTHOR_EMAIL="$email" \
             GIT_COMMITTER_NAME="$BOT_LOGIN" GIT_COMMITTER_EMAIL="$email" \
             git commit -m "$COMMIT_MESSAGE"
           commit_sha="$(git rev-parse HEAD)"
           validate_proposal "$commit_sha"
-          git -c http.https://github.com/.extraheader= -c credential.helper= \
-            -c 'credential.helper=!gh auth git-credential' \
-            push origin "HEAD:refs/heads/${PROPOSAL_BRANCH}"
+          git_network push origin "HEAD:refs/heads/${PROPOSAL_BRANCH}"
           created=true
         fi
         printf 'changed=%s\ncommit=%s\n' "$created" "$commit_sha" >> "$GITHUB_OUTPUT"
 
         body_file="$temp_dir/body"
         printf '%s\n' "$PR_BODY" > "$body_file"
+        pr_fields='number,url,headRefName,baseRefName,headRefOid,headRepositoryOwner,headRepository,isCrossRepository'
+        pr_query='.[] | [.number,.url,.headRepositoryOwner.login,.headRepository.name,.headRefName,.baseRefName,.headRefOid,.isCrossRepository] | @tsv'
+        validate_pr() {
+          local record="$1" owner repo head base sha cross
+          IFS=$'\t' read -r number url owner repo head base sha cross <<< "$record"
+          [[ "$number" =~ ^[1-9][0-9]*$ ]] && [ "$url" = "https://github.com/${GITHUB_REPOSITORY}/pull/${number}" ] || fail 'A API retornou uma proposta inesperada.'
+          [ "$owner/$repo" = "$GITHUB_REPOSITORY" ] && [ "$cross" = false ] || fail 'A proposta pertence a outro repositorio.'
+          [ "$head" = "$PROPOSAL_BRANCH" ] && [ "$base" = "$BASE_BRANCH" ] || fail 'Branches da proposta nao correspondem ao envio.'
+          [ "$sha" = "$commit_sha" ] || fail 'A PR nao contem o commit enviado; nao sera editada.'
+        }
         find_pr() {
-          gh pr list --repo "$GITHUB_REPOSITORY" --head "$PROPOSAL_BRANCH" \
-            --base "$BASE_BRANCH" --state open --json number,url \
-            --jq '.[0] // empty | [.number,.url] | @tsv'
+          local records record n u owner repo head base sha cross selected=''
+          records="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$PROPOSAL_BRANCH" \
+            --base "$BASE_BRANCH" --state open --limit 100 --json "$pr_fields" --jq "$pr_query")"
+          while IFS= read -r record; do
+            [ -n "$record" ] || continue
+            IFS=$'\t' read -r n u owner repo head base sha cross <<< "$record"
+            [[ "$n" =~ ^[1-9][0-9]*$ && "$sha" =~ ^[0-9a-f]{40}$ ]] && \
+              [ -n "$u" ] && [ -n "$owner" ] && [ -n "$repo" ] && [ -n "$head" ] && [ -n "$base" ] && \
+              { [ "$cross" = true ] || [ "$cross" = false ]; } || fail 'Metadados incompletos de PR retornados pela API.'
+            # Forks can share the branch name. They must never be edited.
+            if [ "$cross" = true ] || [ "$owner/$repo" != "$GITHUB_REPOSITORY" ]; then continue; fi
+            validate_pr "$record"
+            [ -z "$selected" ] || fail 'Mais de uma PR corresponde a branch; resolva a ambiguidade.'
+            selected="$record"
+          done <<< "$records"
+          printf '%s' "$selected"
         }
         record="$(find_pr)"
         if [ -z "$record" ]; then
@@ -175,10 +211,12 @@ runs:
             [ -n "$record" ] || fail 'O push terminou, mas a API nao criou a proposta. Uma nova execucao pode recupera-la.'
           fi
         fi
-        if [ -n "$record" ]; then
-          IFS=$'\t' read -r number url <<< "$record"
-        fi
+        if [ -n "$record" ]; then validate_pr "$record"; fi
         [[ "$number" =~ ^[1-9][0-9]*$ ]] && [ "$url" = "https://github.com/${GITHUB_REPOSITORY}/pull/${number}" ] || fail 'A API retornou uma proposta inesperada.'
+        # Re-read after push/create: the returned URL alone proves no head identity.
+        current="$(gh pr view "$number" --repo "$GITHUB_REPOSITORY" --json "$pr_fields" \
+          --jq '[.number,.url,.headRepositoryOwner.login,.headRepository.name,.headRefName,.baseRefName,.headRefOid,.isCrossRepository] | @tsv')"
+        validate_pr "$current"
         if [ -n "$record" ]; then
           gh pr edit "$number" --repo "$GITHUB_REPOSITORY" --title "$PR_TITLE" --body-file "$body_file"
         fi

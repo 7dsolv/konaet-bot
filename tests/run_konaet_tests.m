@@ -18,7 +18,9 @@ proposal_names = {'no-change', 'new-proposal', 'delete-and-create', 'spaces', ..
     'empty-allowlist', 'wrong-push-url', 'newline-filename', 'unchanged-remote', ...
     'rename-within', 'rename-from-outside', 'hook-stages-outside', ...
     'author-environment', 'remote-outside-allowlist', 'recovery-outside-allowlist', ...
-    'glob-path', 'merged-remote', 'rename-unstaged-within', 'cancelled-staging'};
+    'glob-path', 'merged-remote', 'rename-unstaged-within', 'cancelled-staging', ...
+    'fork-only-pr', 'wrong-head-sha', 'wrong-head-branch', 'wrong-head-base', ...
+    'duplicate-own-pr', 'wrong-view-sha', 'rewritten-origin', 'rewritten-push', 'multiple-push-urls'};
 for i = 1:numel(identity_names)
     name = identity_names{i};
     cases(end+1) = evaluate(name, 'identity-offline', @() identity_case(root, name)); %#ok<AGROW>
@@ -153,6 +155,29 @@ switch name
     case 'wrong-push-url'
         git(f, 'config remote.origin.pushurl https://github.com/outro/repositorio.git');
         expected_failure = true;
+    case 'rewritten-origin'
+        git(f, ['config ' q(['url.' f.remote '-other.insteadOf']) ' ' q(f.remote)]);
+        expected_failure = true;
+    case 'rewritten-push'
+        git(f, ['config ' q(['url.' f.remote '-other.pushInsteadOf']) ' ' q(f.remote)]);
+        expected_failure = true;
+    case 'multiple-push-urls'
+        git(f, ['config --add remote.origin.pushurl ' q(f.remote)]);
+        git(f, ['config --add remote.origin.pushurl ' q(f.remote)]);
+        expected_failure = true;
+    case 'fork-only-pr'
+        foreign=strrep(pr_record(),sprintf('konaet-tests\tfixture'),sprintf('unrelated-fork\tfixture'));
+        foreign=strrep(foreign,sprintf('\tfalse\n'),sprintf('\ttrue\n'));
+        write_text(fullfile(f.mock,'pr.tsv'),foreign);
+    case {'wrong-head-sha','wrong-head-branch','wrong-head-base','duplicate-own-pr'}
+        record=pr_record();
+        if strcmp(name,'wrong-head-sha'),record=strrep(record,'CURRENT_HEAD',repmat('0',1,40));end
+        if strcmp(name,'wrong-head-branch'),record=strrep(record,sprintf('\tkonaet/updates\t'),sprintf('\tother-branch\t'));end
+        if strcmp(name,'wrong-head-base'),record=strrep(record,sprintf('\tmain\t'),sprintf('\tother-base\t'));end
+        if strcmp(name,'duplicate-own-pr'),record=[record record];end
+        write_text(fullfile(f.mock,'pr.tsv'),record);expected_failure=true;
+    case 'wrong-view-sha'
+        write_text(fullfile(f.mock,'view.bad'),'1');expected_failure=true;
     case 'newline-filename'
         write_text(fullfile(f.work, 'data', sprintf('quebra\nlinha.txt')), 'newline');
         expected_failure = true;
@@ -244,7 +269,9 @@ elseif ismember(name, {'stale-branch', 'remote-outside-allowlist', 'recovery-out
 elseif strcmp(name, 'push-race')
     assert(strcmp(other, remote_head(f, 'konaet/updates')), 'Push sobrescreveu o commit concorrente.');
 elseif expected_failure
-    if ~strcmp(name, 'unexpected-pr-url')
+    after_push={'unexpected-pr-url','wrong-head-sha','wrong-head-branch', ...
+        'wrong-head-base','duplicate-own-pr','wrong-view-sha'};
+    if ~ismember(name, after_push)
         assert(isempty(remote_head(f, 'konaet/updates')), 'Uma validacao recusada enviou commit.');
     else
         assert(~contains(fileread(fullfile(f.mock, 'gh.log')), 'pr edit'), 'Proposta de outro repositorio foi editada.');
@@ -274,6 +301,9 @@ else
             assert(strcmp(fileread(fullfile(f.mock, 'body')), [body newline]));
         case 'concurrent-pr'
             assert(contains(fileread(fullfile(f.mock, 'gh.log')), 'pr edit'));
+        case 'fork-only-pr'
+            calls=fileread(fullfile(f.mock,'gh.log'));
+            assert(contains(calls,'pr create') && ~contains(calls,'pr edit'));
     end
 end
 end
@@ -313,8 +343,6 @@ git(f, 'config user.name Fixture'); git(f, 'config user.email fixture@example.in
 mkdir(fullfile(f.work, 'data')); write_text(fullfile(f.work, 'data', 'value.txt'), 'base');
 write_text(fullfile(f.work, 'fixture-source.txt'), 'source');
 git(f, 'add data/value.txt fixture-source.txt'); git(f, 'commit -m base'); git(f, 'push -u origin main');
-git(f, ['config ' q(['url.' f.remote '.insteadOf']) ' https://github.com/konaet-tests/fixture.git']);
-git(f, 'remote set-url origin https://github.com/konaet-tests/fixture.git');
 write_text(fullfile(f.mock, 'gh'), mock_gh());
 cmd(['chmod 700 ' q(fullfile(f.mock, 'gh'))]);
 setenv('PATH', [f.mock pathsep getenv('PATH')]);
@@ -331,6 +359,10 @@ git(f, 'push origin HEAD:refs/heads/konaet/updates');
 end
 
 function [status, log] = execute(f, script)
+% Inject only the expected URL constant in the extracted script. Production
+% code has no offline bypass and still validates every effective Git URL.
+script=strrep(script,'expected="https://github.com/${GITHUB_REPOSITORY}"', ...
+    ['expected=' q(f.remote)]);
 write_text(fullfile(f.folder, 'step.bash'), script);
 if isfile(f.output), delete(f.output); end
 trace_path = fullfile(f.folder, 'step-trace.log');
@@ -409,7 +441,7 @@ if isfolder(folder), rmdir(folder, 's'); end
 end
 
 function record = pr_record()
-record = sprintf('23\thttps://github.com/konaet-tests/fixture/pull/23\n');
+record = sprintf('23\thttps://github.com/konaet-tests/fixture/pull/23\tkonaet-tests\tfixture\tkonaet/updates\tmain\tCURRENT_HEAD\tfalse\n');
 end
 
 function script = mock_gh()
@@ -432,18 +464,27 @@ lines = [
 "    esac"
 "  done"
 "}"
+"write_pr() {"
+"  printf '23\thttps://github.com/konaet-tests/fixture/pull/23\tkonaet-tests\tfixture\tkonaet/updates\tmain\t%s\tfalse\n' ""$(git rev-parse HEAD)"" > ""$MOCK_DIR/pr.tsv"""
+"}"
+"read_pr() {"
+"  [ ! -f ""$MOCK_DIR/pr.tsv"" ] || sed ""s/CURRENT_HEAD/$(git rev-parse HEAD)/g"" ""$MOCK_DIR/pr.tsv"""
+"}"
 "case ""$sub"" in"
-"  list) [ ! -f ""$MOCK_DIR/pr.tsv"" ] || cat ""$MOCK_DIR/pr.tsv"" ;;"
+"  list) read_pr ;;"
+"  view)"
+"    if [ -f ""$MOCK_DIR/view.bad"" ]; then read_pr | sed ""s/$(git rev-parse HEAD)/0000000000000000000000000000000000000000/g"";"
+"    else read_pr; fi ;;"
 "  create)"
 "    if [ -f ""$MOCK_DIR/create.fail"" ]; then"
 "      rm ""$MOCK_DIR/create.fail"""
 "      if [ -f ""$MOCK_DIR/race"" ]; then"
-"        printf '23\thttps://github.com/konaet-tests/fixture/pull/23\n' > ""$MOCK_DIR/pr.tsv"""
+"        write_pr"
 "      fi"
 "      exit 42"
 "    fi"
 "    save_fields ""$@"""
-"    printf '23\thttps://github.com/konaet-tests/fixture/pull/23\n' > ""$MOCK_DIR/pr.tsv"""
+"    write_pr"
 "    printf 'https://github.com/konaet-tests/fixture/pull/23\n'"
 "    ;;"
 "  edit) save_fields ""$@"" ;;"

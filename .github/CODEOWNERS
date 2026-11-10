@@ -1,0 +1,4 @@
+# Code and security configuration require the owner's review.
+* @7dsolv
+# Generated status may merge after required checks without a code-owner review.
+/state/
