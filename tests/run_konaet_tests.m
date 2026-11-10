@@ -187,7 +187,7 @@ switch name
         if strcmp(name,'delayed-list-head'),kind='list';else,kind='view';end
         write_text(fullfile(f.mock,[kind '.delay']),'2');
     case 'proposal-api-failure'
-        write_text(fullfile(f.mock,'list.fail'),'1');expected_failure=true;
+        write_text(fullfile(f.mock,'list.fail'),'1');
     case 'newline-filename'
         write_text(fullfile(f.work, 'data', sprintf('quebra\nlinha.txt')), 'newline');
         expected_failure = true;
@@ -251,9 +251,13 @@ switch name
 end
 base = bare_git(f, 'rev-parse refs/heads/main');
 [status, log] = execute(f, script);
-if strcmp(name, 'recover-after-api-failure')
+if ismember(name, {'recover-after-api-failure','proposal-api-failure'})
     assert(status ~= 0 && ~isempty(remote_head(f, 'konaet/updates')), 'Falha da API nao exercitou push parcial.');
     pushed = remote_head(f, 'konaet/updates');
+    if strcmp(name,'proposal-api-failure')
+        assert(~contains(fileread(fullfile(f.mock,'gh.log')),'pr create'),'Falha de listagem foi tratada como lista vazia.');
+        delete(fullfile(f.mock,'list.fail'));
+    end
     [status, log] = execute(f, script);
     assert(status == 0, 'Recuperacao falhou: %s', log);
     assert(strcmp(pushed, remote_head(f, 'konaet/updates')), 'Recuperacao criou commit duplicado.');
