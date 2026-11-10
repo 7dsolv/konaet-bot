@@ -30,7 +30,7 @@ Para verificar a preparação local, execute `ativar_konaet(CheckOnly=true)` no 
 
 Uma Action para autenticar sua GitHub App e um módulo para transformar arquivos gerados pelo projeto em propostas revisáveis. A Konaet confere a identidade do bot, restringe o diff aos caminhos permitidos e entrega uma pull request ao mantenedor.
 
-O [laboratório integrado](https://github.com/7dsolv/RealidadeQuantica/tree/main/integrated) é um módulo separado: treina o detector KONAET Sense do zero, atualiza uma política de pesquisa persistente e publica comparações, circuito, esquema/PCB e inferência SystemVerilog. Este pacote de identidade não é o modelo neural. Os resultados incluem cenários desfavoráveis e distinguem estimativas das ferramentas de medições físicas. A autenticação real da App continua dependendo das credenciais da instalação, conforme o [contrato](docs/CONTRACT.md).
+O [laboratório integrado](https://github.com/7dsolv/RealidadeQuantica/tree/main/integrated) é um módulo separado: treina o detector KONAET Sense do zero, atualiza uma política de pesquisa persistente e publica comparações, circuito, esquema/PCB e inferência SystemVerilog. Este pacote de identidade não é o modelo neural. Os resultados incluem cenários desfavoráveis e distinguem estimativas das ferramentas de medições físicas. A App oficial já foi autenticada neste repositório; cada consumidor configura sua própria instalação, conforme o [contrato](docs/CONTRACT.md).
 
 A identidade visual usa o **cubo roxo original da KONAET**, fornecido no projeto `konaet-cover`. O nome público é **KONAET**; o endereço técnico `7dsolv/konaet-bot` preserva as integrações existentes. [Origem da marca](visuals/brand/README.md).
 
@@ -68,16 +68,16 @@ permissions:
 
 jobs:
   propor:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: 7dsolv/konaet-bot@v1.1.1
+      - uses: 7dsolv/konaet-bot@a27acebb28894beb79a7f83409788d4122a9fd41 # v1.3.0 source
         id: konaet
         with:
           client-id: ${{ vars.KONAET_APP_CLIENT_ID }}
           private-key: ${{ secrets.KONAET_APP_PRIVATE_KEY }}
           expected-slug: konaet # substitua pelo slug da sua App
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           token: ${{ steps.konaet.outputs.token }}
           fetch-depth: 0
@@ -87,7 +87,7 @@ jobs:
           mkdir -p relatorios
           date -u '+Execucao em %Y-%m-%dT%H:%M:%SZ' > relatorios/estado.txt
 
-      - uses: 7dsolv/konaet-bot/propose@v1.1.1
+      - uses: 7dsolv/konaet-bot/propose@a27acebb28894beb79a7f83409788d4122a9fd41 # v1.3.0 source
         with:
           token: ${{ steps.konaet.outputs.token }}
           bot-login: ${{ steps.konaet.outputs.bot-login }}

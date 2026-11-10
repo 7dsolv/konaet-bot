@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "mode": "offline-synthetic-keys-no-live-app",
-  "source_revision": "6da1e1d7a6c250a548c29cb4f52b416dd8c16075",
-  "total": 16,
-  "passed": 16,
+  "source_revision": "a27acebb28894beb79a7f83409788d4122a9fd41",
+  "total": 19,
+  "passed": 19,
   "cases": [
     {
       "name": "rsa-pkcs8-signature-and-claims",
@@ -82,6 +82,21 @@
     },
     {
       "name": "process-environment-is-child-only",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "process-large-output-no-pipe-deadlock",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "process-timeout-including-ignored-stdin",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "process-output-limit",
       "passed": true,
       "error_id": ""
     }
