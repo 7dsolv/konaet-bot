@@ -19,6 +19,8 @@ Verified GitHub App identity and reviewable updates, with explicit repository sc
 
 [Ativação das credenciais em MATLAB](docs/ACTIVATION.md) · [Evidências do agente e significado dos selos](https://github.com/7dsolv/RealidadeQuantica/blob/main/integrated/VERIFICATION.md)
 
+Para verificar a preparação local, execute `ativar_konaet(CheckOnly=true)` no MATLAB. Depois de gerar a chave privada no cadastro oficial da App, `ativar_konaet` valida a conta e as instalações, configura os dois repositórios e solicita as verificações reais. A [suíte de ativação](assets/activation-test-report.json) usa chaves sintéticas e mantém a autenticação real como uma checagem separada.
+
 Uma Action para autenticar sua GitHub App e um módulo para transformar arquivos gerados pelo projeto em propostas revisáveis. A Konaet confere a identidade do bot, restringe o diff aos caminhos permitidos e entrega uma pull request ao mantenedor.
 
 O [laboratório integrado](https://github.com/7dsolv/RealidadeQuantica/tree/main/integrated) é um módulo separado: treina o detector KONAET Sense do zero, atualiza uma política de pesquisa persistente e publica comparações, circuito, esquema/PCB e inferência SystemVerilog. Este pacote de identidade não é o modelo neural. Os resultados incluem cenários desfavoráveis e distinguem estimativas das ferramentas de medições físicas. A autenticação real da App continua dependendo das credenciais da instalação, conforme o [contrato](docs/CONTRACT.md).

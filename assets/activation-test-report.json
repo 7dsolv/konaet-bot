@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "mode": "offline-synthetic-keys-no-live-app",
+  "source_revision": "6da1e1d7a6c250a548c29cb4f52b416dd8c16075",
+  "total": 16,
+  "passed": 16,
+  "cases": [
+    {
+      "name": "rsa-pkcs8-signature-and-claims",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "rsa-pkcs1-signature",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "invalid-pem",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "encrypted-key-rejected",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "weak-rsa-rejected",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "issuer-injection-rejected",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "valid-activation-policy",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "wrong-app-rejected",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "wrong-owner-rejected",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "insufficient-permissions-rejected",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "foreign-installation-rejected",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "suspended-installation-rejected",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "check-only-does-not-read-key-or-execute",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "missing-key-has-no-verified-status",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "process-stdin-and-literal-path",
+      "passed": true,
+      "error_id": ""
+    },
+    {
+      "name": "process-environment-is-child-only",
+      "passed": true,
+      "error_id": ""
+    }
+  ],
+  "live_app": "NOT_RUN"
+}

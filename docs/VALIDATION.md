@@ -21,6 +21,14 @@ O CI também executa o módulo composite diretamente no runner, com outro remoto
 
 A marca é o cubo roxo original de `7dsolv/konaet-cover`, com origem fixada em revisão e SHA-256. O CI confere esse hash, a identificação **KONAET** no manifesto e a igualdade byte a byte entre o ícone publicado e o arquivo de origem. A capa, o diagrama e a animação usam a mesma imagem; a composição final também foi inspecionada visualmente.
 
+## Ativador MATLAB / 16 verificações adicionais
+
+A [execução em `main`](https://github.com/7dsolv/konaet-bot/actions/runs/42880475117), na revisão `6da1e1d7a6c250a548c29cb4f52b416dd8c16075`, passou novamente nos 40 cenários anteriores e em **16 verificações do ativador**. O [relatório adicional](../assets/activation-test-report.json) registra os casos e a origem.
+
+As verificações adicionais usam chaves RSA sintéticas: assinaturas PKCS#1/PKCS#8, claims e adulteração do payload; rejeição de chaves fracas, cifradas ou inválidas; conta/App/instalação incorretas; permissões insuficientes e suspensão. Também exercitam a descoberta apenas de metadados e processos reais com stdin, caminhos literais e ambiente restrito ao filho.
+
+Esses testes não enviam Secrets nem autenticam a App real. `NOT_RUN` continua explícito no relatório adicional. [Procedimento de ativação](ACTIVATION.md).
+
 ## Verificação real separada
 
 Registro e instalação da App, emissão/revogação de token no GitHub e criação de PR com a identidade oficial não são demonstrados pelo fixture. O relatório os marca como **NOT_RUN**. Depois de configurar a App, execute **Actions → Verificar identidade real da App** e depois o workflow manual de proposta para conferir a integração real.

@@ -10,7 +10,7 @@ O produto a listar é a **Action KONAET**. A GitHub App que fornece sua identida
 | Descrição | Verified GitHub App identity and scoped tokens for reviewable repository updates. |
 | Categoria principal sugerida | Code review |
 | Categoria secundária sugerida | Utilities |
-| Versão | v1.1.1 |
+| Versão | v1.2.0 |
 | Branding da Action | Ícone `git-pull-request`, cor `purple`, conforme os campos aceitos pelo GitHub. |
 | Apresentação | README com o cubo roxo original da KONAET, capa, GIF e diagrama compostos em MATLAB. |
 | Ícone para a App | `assets/konaet-app-icon.png`: cópia exata do cubo original, para upload na página da App. |
