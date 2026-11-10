@@ -29,7 +29,10 @@ items = {
     'check-only-does-not-read-key-or-execute', @() discovery_case(folder);
     'missing-key-has-no-verified-status', @() missing_case(folder);
     'process-stdin-and-literal-path', @() process_case(folder);
-    'process-environment-is-child-only', @() environment_case()
+    'process-environment-is-child-only', @() environment_case();
+    'process-large-output-no-pipe-deadlock', @() large_output_case();
+    'process-timeout-including-ignored-stdin', @() timeout_case();
+    'process-output-limit', @() output_limit_case()
 };
 cases = struct('name',{},'passed',{},'error_id',{});
 for k = 1:size(items,1)
@@ -42,6 +45,7 @@ for k = 1:size(items,1)
     end
     cases(end+1) = item; %#ok<AGROW>
 end
+
 report = struct('schema_version',1,'mode','offline-synthetic-keys-no-live-app', ...
     'source_revision',getenv('GITHUB_SHA'),'total',numel(cases), ...
     'passed',sum([cases.passed]),'cases',cases,'live_app','NOT_RUN');
@@ -50,6 +54,21 @@ fid = fopen(fullfile(output_dir,'activation-test-report.json'),'w','n','UTF-8');
 assert(fid >= 0); close_guard = onCleanup(@() fclose(fid)); %#ok<NASGU>
 fprintf(fid,'%s\n',jsonencode(report,PrettyPrint=true));
 assert(report.passed == report.total,'Konaet:ActivationTestFailure','Ativacao: %d/%d passaram.',report.passed,report.total);
+end
+
+function large_output_case()
+[status,value]=konaet_process({'bash','-c','head -c 262144 /dev/zero | tr "\0" x'},'',struct(),8);
+assert(status==0 && numel(value)==262144 && all(value=='x'));
+end
+
+function timeout_case()
+started=tic;
+must_error(@() konaet_process({'bash','-c','sleep 10'},repmat('s',1,60000),struct(),0.5),'Konaet:ProcessTimeout');
+assert(toc(started)<5);
+end
+
+function output_limit_case()
+must_error(@() konaet_process({'bash','-c','head -c 3145728 /dev/zero'},'',struct(),5),'Konaet:ProcessOutputLimit');
 end
 
 function signature_case(pem,pair)

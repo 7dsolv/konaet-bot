@@ -1,5 +1,18 @@
 # Histórico
 
+## v1.3.0
+
+- PRs conferidas por repositório, branches e SHA, incluindo releitura após criação.
+- Destinos efetivos do Git validados; reescritas e múltiplos push URLs recusados.
+- Regressões para forks homônimos, metadados divergentes e redirecionamentos.
+- Helper de processos com prazo, limite de saída e I/O temporário privado.
+- Dependências fixadas por SHA, revisão por responsáveis e documentação de manutenção.
+
+## v1.2.0
+
+- Ativador MATLAB, política de instalação e assinatura JWT com chaves sintéticas nos testes.
+- Credenciais da App verificadas nos dois repositórios e prova pública de autenticação real.
+
 ## v1.1.1
 
 - Nome público unificado para **KONAET**, incluindo metadados da Action e apresentação.

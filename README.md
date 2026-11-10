@@ -2,6 +2,11 @@
 
 # KONAET
 
+**Hardened repository automation.** Validate a scoped App identity, publish an
+allowed diff and verify the exact repository/branch/commit of its pull request.
+See [maintenance and support](docs/MAINTENANCE.md), [usage contract](docs/CONTRACT.md)
+and [private vulnerability reporting](SECURITY.md).
+
 **[Página da App KONAET](https://github.com/apps/konaet)** · **[Laboratório XENOELEMENT X-01](https://github.com/7dsolv/RealidadeQuantica/tree/main/xeno)**
 
 **[Sistema offline KONAET: componentes em código, circuito e IA local](https://github.com/7dsolv/RealidadeQuantica/tree/main/offline)** · **[Explorar a placa em 3D](https://github.com/7dsolv/RealidadeQuantica/blob/main/hardware/x01-carrier/x01-carrier.stl)**

@@ -2,6 +2,11 @@
 
 O pacote suporta runners Linux com Bash, Git e GitHub CLI no GitHub.com. A origem Git deve ser HTTPS e corresponder a `github.repository`. O mantenedor define o gerador e os arquivos que ele pode propor.
 
+A origem efetiva de leitura e escrita é conferida novamente antes das operações
+de rede. Reescritas de URL e múltiplos destinos não são aceitos. Uma PR somente
+é usada depois de conferir repositório de origem, branches e SHA exato do commit;
+forks com nome de branch igual são ignorados. A identidade é relida após criar a PR.
+
 ## Identidade — raiz do pacote
 
 `client-id` e `private-key` são obrigatórios. `expected-slug` tem padrão `konaet`; outra App precisa do seu próprio slug. A Action compara slug e consulta ID, login e tipo `Bot` pela API. As saídas são `token`, `installation-id`, `app-slug`, `bot-login`, `bot-id` e `bot-email`.
