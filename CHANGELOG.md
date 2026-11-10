@@ -1,5 +1,12 @@
 # Histórico
 
+## v1.3.1
+
+- Aguarda de forma limitada a consistência do SHA na API após um push, sem editar uma PR enquanto o commit exato não for confirmado.
+- Mantém a rejeição de SHA persistentemente divergente, fork, branch, base ou metadados incorretos.
+- Envia erros para stderr para preservar o diagnóstico dentro de substituições de comando.
+- Regressões para atraso na listagem/releitura e falha da API de propostas.
+
 ## v1.3.0
 
 - PRs conferidas por repositório, branches e SHA, incluindo releitura após criação.

@@ -20,7 +20,8 @@ proposal_names = {'no-change', 'new-proposal', 'delete-and-create', 'spaces', ..
     'author-environment', 'remote-outside-allowlist', 'recovery-outside-allowlist', ...
     'glob-path', 'merged-remote', 'rename-unstaged-within', 'cancelled-staging', ...
     'fork-only-pr', 'wrong-head-sha', 'wrong-head-branch', 'wrong-head-base', ...
-    'duplicate-own-pr', 'wrong-view-sha', 'rewritten-origin', 'rewritten-push', 'multiple-push-urls'};
+    'duplicate-own-pr', 'wrong-view-sha', 'rewritten-origin', 'rewritten-push', 'multiple-push-urls', ...
+    'delayed-list-head','delayed-view-head','proposal-api-failure'};
 for i = 1:numel(identity_names)
     name = identity_names{i};
     cases(end+1) = evaluate(name, 'identity-offline', @() identity_case(root, name)); %#ok<AGROW>
@@ -178,6 +179,15 @@ switch name
         write_text(fullfile(f.mock,'pr.tsv'),record);expected_failure=true;
     case 'wrong-view-sha'
         write_text(fullfile(f.mock,'view.bad'),'1');expected_failure=true;
+    case {'delayed-list-head','delayed-view-head'}
+        git(f,'checkout -- data/value.txt');seed_proposal(f);
+        prior=remote_head(f,'konaet/updates');
+        write_text(fullfile(f.work,'data','value.txt'),'second-update');
+        write_text(fullfile(f.mock,'pr.tsv'),pr_record());
+        if strcmp(name,'delayed-list-head'),kind='list';else,kind='view';end
+        write_text(fullfile(f.mock,[kind '.delay']),'2');
+    case 'proposal-api-failure'
+        write_text(fullfile(f.mock,'list.fail'),'1');expected_failure=true;
     case 'newline-filename'
         write_text(fullfile(f.work, 'data', sprintf('quebra\nlinha.txt')), 'newline');
         expected_failure = true;
@@ -283,7 +293,7 @@ else
         '1234+konaet[bot]@users.noreply.github.com'));
     assert(strcmp(bare_git(f, 'show -s --format=%cn refs/heads/konaet/updates'), 'konaet[bot]'));
     switch name
-        case 'existing-pr'
+        case {'existing-pr','delayed-list-head','delayed-view-head'}
             assert(~strcmp(prior, remote_head(f, 'konaet/updates')));
             calls = fileread(fullfile(f.mock, 'gh.log'));
             assert(contains(calls, 'pr edit') && ~contains(calls, 'pr create'));
@@ -470,11 +480,19 @@ lines = [
 "read_pr() {"
 "  [ ! -f ""$MOCK_DIR/pr.tsv"" ] || sed ""s/CURRENT_HEAD/$(git rev-parse HEAD)/g"" ""$MOCK_DIR/pr.tsv"""
 "}"
+"delayed_pr() {"
+"  local kind=""$1"" count=0"
+"  if [ -f ""$MOCK_DIR/$kind.delay"" ]; then count=""$(cat ""$MOCK_DIR/$kind.delay"")""; fi"
+"  if [ ""$count"" -gt 0 ]; then"
+"    printf '%s' ""$((count-1))"" > ""$MOCK_DIR/$kind.delay"""
+"    read_pr | sed ""s/$(git rev-parse HEAD)/0000000000000000000000000000000000000000/g"""
+"  else read_pr; fi"
+"}"
 "case ""$sub"" in"
-"  list) read_pr ;;"
+"  list) [ ! -f ""$MOCK_DIR/list.fail"" ] || exit 43; delayed_pr list ;;"
 "  view)"
 "    if [ -f ""$MOCK_DIR/view.bad"" ]; then read_pr | sed ""s/$(git rev-parse HEAD)/0000000000000000000000000000000000000000/g"";"
-"    else read_pr; fi ;;"
+"    else delayed_pr view; fi ;;"
 "  create)"
 "    if [ -f ""$MOCK_DIR/create.fail"" ]; then"
 "      rm ""$MOCK_DIR/create.fail"""

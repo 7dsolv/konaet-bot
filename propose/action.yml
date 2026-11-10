@@ -62,7 +62,7 @@ runs:
         SERVER_URL: ${{ github.server_url }}
       run: |
         set -euo pipefail
-        fail() { echo "::error::$1"; exit 1; }
+        fail() { echo "::error::$1" >&2; exit 1; }
         [ "$SERVER_URL" = 'https://github.com' ] || fail 'Este pacote suporta GitHub.com.'
         [[ "$GITHUB_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || fail 'Repositorio invalido.'
         [[ "$BOT_LOGIN" =~ ^[a-z0-9-]+\[bot\]$ ]] && [[ "$BOT_ID" =~ ^[1-9][0-9]*$ ]] || fail 'Identidade Bot invalida.'
@@ -181,12 +181,14 @@ runs:
           [[ "$number" =~ ^[1-9][0-9]*$ ]] && [ "$url" = "https://github.com/${GITHUB_REPOSITORY}/pull/${number}" ] || fail 'A API retornou uma proposta inesperada.'
           [ "$owner/$repo" = "$GITHUB_REPOSITORY" ] && [ "$cross" = false ] || fail 'A proposta pertence a outro repositorio.'
           [ "$head" = "$PROPOSAL_BRANCH" ] && [ "$base" = "$BASE_BRANCH" ] || fail 'Branches da proposta nao correspondem ao envio.'
-          [ "$sha" = "$commit_sha" ] || fail 'A PR nao contem o commit enviado; nao sera editada.'
+          if [ "${2:-strict}" = strict ]; then
+            [ "$sha" = "$commit_sha" ] || fail 'A PR nao contem o commit enviado; nao sera editada.'
+          fi
         }
         find_pr() {
-          local records record n u owner repo head base sha cross selected=''
+          local records record n u owner repo head base sha cross selected='' selected_sha=''
           records="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$PROPOSAL_BRANCH" \
-            --base "$BASE_BRANCH" --state open --limit 100 --json "$pr_fields" --jq "$pr_query")"
+            --base "$BASE_BRANCH" --state open --limit 100 --json "$pr_fields" --jq "$pr_query")" || return $?
           while IFS= read -r record; do
             [ -n "$record" ] || continue
             IFS=$'\t' read -r n u owner repo head base sha cross <<< "$record"
@@ -195,27 +197,45 @@ runs:
               { [ "$cross" = true ] || [ "$cross" = false ]; } || fail 'Metadados incompletos de PR retornados pela API.'
             # Forks can share the branch name. They must never be edited.
             if [ "$cross" = true ] || [ "$owner/$repo" != "$GITHUB_REPOSITORY" ]; then continue; fi
-            validate_pr "$record"
+            validate_pr "$record" identity
             [ -z "$selected" ] || fail 'Mais de uma PR corresponde a branch; resolva a ambiguidade.'
             selected="$record"
+            selected_sha="$sha"
           done <<< "$records"
           printf '%s' "$selected"
+          if [ -n "$selected" ] && [ "$selected_sha" != "$commit_sha" ]; then return 75; fi
         }
-        record="$(find_pr)"
+        find_current_pr() {
+          local candidate status attempt
+          for attempt in 0 1 2 3 4; do
+            if candidate="$(find_pr)"; then printf '%s' "$candidate"; return 0;
+            else status=$?; [ "$status" -eq 75 ] || return "$status"; fi
+            [ "$attempt" -lt 4 ] || fail 'A API ainda nao confirma o SHA enviado; nenhuma PR sera editada. Uma nova execucao pode recuperar o push.'
+            sleep "$((attempt+1))"
+          done
+        }
+        record="$(find_current_pr)"
         if [ -z "$record" ]; then
           if url="$(gh pr create --repo "$GITHUB_REPOSITORY" --base "$BASE_BRANCH" \
             --head "$PROPOSAL_BRANCH" --title "$PR_TITLE" --body-file "$body_file")"; then
             number="${url##*/}"
           else
-            record="$(find_pr)"
+            record="$(find_current_pr)"
             [ -n "$record" ] || fail 'O push terminou, mas a API nao criou a proposta. Uma nova execucao pode recupera-la.'
           fi
         fi
         if [ -n "$record" ]; then validate_pr "$record"; fi
         [[ "$number" =~ ^[1-9][0-9]*$ ]] && [ "$url" = "https://github.com/${GITHUB_REPOSITORY}/pull/${number}" ] || fail 'A API retornou uma proposta inesperada.'
         # Re-read after push/create: the returned URL alone proves no head identity.
-        current="$(gh pr view "$number" --repo "$GITHUB_REPOSITORY" --json "$pr_fields" \
-          --jq '[.number,.url,.headRepositoryOwner.login,.headRepository.name,.headRefName,.baseRefName,.headRefOid,.isCrossRepository] | @tsv')"
+        for attempt in 0 1 2 3 4; do
+          current="$(gh pr view "$number" --repo "$GITHUB_REPOSITORY" --json "$pr_fields" \
+            --jq '[.number,.url,.headRepositoryOwner.login,.headRepository.name,.headRefName,.baseRefName,.headRefOid,.isCrossRepository] | @tsv')"
+          validate_pr "$current" identity
+          current_sha="$(cut -f7 <<< "$current")"
+          [ "$current_sha" != "$commit_sha" ] || break
+          [ "$attempt" -lt 4 ] || fail 'A releitura da API ainda nao confirma o SHA enviado; nenhuma PR sera editada.'
+          sleep "$((attempt+1))"
+        done
         validate_pr "$current"
         if [ -n "$record" ]; then
           gh pr edit "$number" --repo "$GITHUB_REPOSITORY" --title "$PR_TITLE" --body-file "$body_file"

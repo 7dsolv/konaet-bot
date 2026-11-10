@@ -1,5 +1,12 @@
 # Contrato de automação
 
+A API pode demorar a indexar o novo SHA de uma PR após o push. A listagem e a
+releitura final admitem até cinco consultas, com esperas limitadas de 1, 2, 3 e
+4 segundos. O bot só edita a proposta depois de confirmar repositório, branches
+e SHA exatos. Divergência persistente interrompe a operação; o push já realizado
+pode ser recuperado em nova execução sem outro commit. Erros não são tratados
+como lista vazia, e diagnósticos seguem em stderr.
+
 O pacote suporta runners Linux com Bash, Git e GitHub CLI no GitHub.com. A origem Git deve ser HTTPS e corresponder a `github.repository`. O mantenedor define o gerador e os arquivos que ele pode propor.
 
 A origem efetiva de leitura e escrita é conferida novamente antes das operações
