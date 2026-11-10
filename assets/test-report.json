@@ -1,19 +1,19 @@
 {
   "schema_version": 1,
-  "revision": "25cde3e41502023ea2c5c78730bc153bbdce2f96",
+  "revision": "a27acebb28894beb79a7f83409788d4122a9fd41",
   "mode": "offline-contract-and-real-local-git",
-  "total": 40,
-  "planned": 40,
+  "total": 49,
+  "planned": 49,
   "complete": true,
-  "passed": 40,
+  "passed": 49,
   "failed": 0,
-  "seconds": 10.658751,
+  "seconds": 10.116292,
   "cases": [
     {
       "name": "valid-bot",
       "group": "identity-offline",
       "passed": true,
-      "seconds": 0.513977,
+      "seconds": 0.979291,
       "error": "",
       "error_id": ""
     },
@@ -21,7 +21,7 @@
       "name": "wrong-slug",
       "group": "identity-offline",
       "passed": true,
-      "seconds": 0.513855,
+      "seconds": 0.461048,
       "error": "",
       "error_id": ""
     },
@@ -29,7 +29,7 @@
       "name": "empty-slug",
       "group": "identity-offline",
       "passed": true,
-      "seconds": 0.416584,
+      "seconds": 0.228664,
       "error": "",
       "error_id": ""
     },
@@ -37,7 +37,7 @@
       "name": "invalid-id",
       "group": "identity-offline",
       "passed": true,
-      "seconds": 1.508474,
+      "seconds": 0.439998,
       "error": "",
       "error_id": ""
     },
@@ -45,7 +45,7 @@
       "name": "wrong-login",
       "group": "identity-offline",
       "passed": true,
-      "seconds": 0.806557,
+      "seconds": 0.354607,
       "error": "",
       "error_id": ""
     },
@@ -53,7 +53,7 @@
       "name": "user-is-not-bot",
       "group": "identity-offline",
       "passed": true,
-      "seconds": 0.110511,
+      "seconds": 0.373042,
       "error": "",
       "error_id": ""
     },
@@ -61,7 +61,7 @@
       "name": "api-failure",
       "group": "identity-offline",
       "passed": true,
-      "seconds": 0.107082,
+      "seconds": 0.241221,
       "error": "",
       "error_id": ""
     },
@@ -69,7 +69,7 @@
       "name": "no-change",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.154533,
+      "seconds": 0.375179,
       "error": "",
       "error_id": ""
     },
@@ -77,7 +77,7 @@
       "name": "new-proposal",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.224401,
+      "seconds": 0.510353,
       "error": "",
       "error_id": ""
     },
@@ -85,7 +85,7 @@
       "name": "delete-and-create",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.240222,
+      "seconds": 0.543207,
       "error": "",
       "error_id": ""
     },
@@ -93,7 +93,7 @@
       "name": "spaces",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.234649,
+      "seconds": 0.62305,
       "error": "",
       "error_id": ""
     },
@@ -101,7 +101,7 @@
       "name": "outside-allowlist",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.153011,
+      "seconds": 0.092077,
       "error": "",
       "error_id": ""
     },
@@ -109,7 +109,7 @@
       "name": "staged-outside-allowlist",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.168173,
+      "seconds": 0.103249,
       "error": "",
       "error_id": ""
     },
@@ -117,7 +117,7 @@
       "name": "path-traversal",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.140269,
+      "seconds": 0.081395,
       "error": "",
       "error_id": ""
     },
@@ -125,7 +125,7 @@
       "name": "path-magic",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.170087,
+      "seconds": 0.082197,
       "error": "",
       "error_id": ""
     },
@@ -133,7 +133,7 @@
       "name": "protected-branch",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.128657,
+      "seconds": 0.08427,
       "error": "",
       "error_id": ""
     },
@@ -141,7 +141,7 @@
       "name": "workflow-file",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.142784,
+      "seconds": 0.091968,
       "error": "",
       "error_id": ""
     },
@@ -149,7 +149,7 @@
       "name": "wrong-origin",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.129878,
+      "seconds": 0.085851,
       "error": "",
       "error_id": ""
     },
@@ -157,7 +157,7 @@
       "name": "stale-branch",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.241279,
+      "seconds": 0.156336,
       "error": "",
       "error_id": ""
     },
@@ -165,7 +165,7 @@
       "name": "existing-pr",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.302521,
+      "seconds": 0.210782,
       "error": "",
       "error_id": ""
     },
@@ -173,7 +173,7 @@
       "name": "recover-after-api-failure",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.293977,
+      "seconds": 0.240141,
       "error": "",
       "error_id": ""
     },
@@ -181,7 +181,7 @@
       "name": "concurrent-pr",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.220572,
+      "seconds": 0.20534,
       "error": "",
       "error_id": ""
     },
@@ -189,7 +189,7 @@
       "name": "literal-inputs",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.220059,
+      "seconds": 0.165395,
       "error": "",
       "error_id": ""
     },
@@ -197,7 +197,7 @@
       "name": "unexpected-pr-url",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.209252,
+      "seconds": 0.144081,
       "error": "",
       "error_id": ""
     },
@@ -205,7 +205,7 @@
       "name": "push-race",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.238674,
+      "seconds": 0.163585,
       "error": "",
       "error_id": ""
     },
@@ -213,7 +213,7 @@
       "name": "empty-allowlist",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.134996,
+      "seconds": 0.076525,
       "error": "",
       "error_id": ""
     },
@@ -221,7 +221,7 @@
       "name": "wrong-push-url",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.135932,
+      "seconds": 0.085743,
       "error": "",
       "error_id": ""
     },
@@ -229,7 +229,7 @@
       "name": "newline-filename",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.144809,
+      "seconds": 0.088085,
       "error": "",
       "error_id": ""
     },
@@ -237,7 +237,7 @@
       "name": "unchanged-remote",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.190821,
+      "seconds": 0.122683,
       "error": "",
       "error_id": ""
     },
@@ -245,7 +245,7 @@
       "name": "rename-within",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.266461,
+      "seconds": 0.163705,
       "error": "",
       "error_id": ""
     },
@@ -253,7 +253,7 @@
       "name": "rename-from-outside",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.147134,
+      "seconds": 0.087219,
       "error": "",
       "error_id": ""
     },
@@ -261,7 +261,7 @@
       "name": "hook-stages-outside",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.193515,
+      "seconds": 0.126185,
       "error": "",
       "error_id": ""
     },
@@ -269,7 +269,7 @@
       "name": "author-environment",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.212078,
+      "seconds": 0.156439,
       "error": "",
       "error_id": ""
     },
@@ -277,7 +277,7 @@
       "name": "remote-outside-allowlist",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.285376,
+      "seconds": 0.20502,
       "error": "",
       "error_id": ""
     },
@@ -285,7 +285,7 @@
       "name": "recovery-outside-allowlist",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.263499,
+      "seconds": 0.173743,
       "error": "",
       "error_id": ""
     },
@@ -293,7 +293,7 @@
       "name": "glob-path",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.134245,
+      "seconds": 0.076622,
       "error": "",
       "error_id": ""
     },
@@ -301,7 +301,7 @@
       "name": "merged-remote",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.268816,
+      "seconds": 0.172414,
       "error": "",
       "error_id": ""
     },
@@ -309,7 +309,7 @@
       "name": "rename-unstaged-within",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.227594,
+      "seconds": 0.164855,
       "error": "",
       "error_id": ""
     },
@@ -317,7 +317,79 @@
       "name": "cancelled-staging",
       "group": "git-integration-offline",
       "passed": true,
-      "seconds": 0.178127,
+      "seconds": 0.105928,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "fork-only-pr",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.158368,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "wrong-head-sha",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.136866,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "wrong-head-branch",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.137969,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "wrong-head-base",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.138548,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "duplicate-own-pr",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.136491,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "wrong-view-sha",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.146229,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "rewritten-origin",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.080184,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "rewritten-push",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.08714,
+      "error": "",
+      "error_id": ""
+    },
+    {
+      "name": "multiple-push-urls",
+      "group": "git-integration-offline",
+      "passed": true,
+      "seconds": 0.084172,
       "error": "",
       "error_id": ""
     },
@@ -325,7 +397,7 @@
       "name": "registration-contract",
       "group": "matlab",
       "passed": true,
-      "seconds": 0.274316,
+      "seconds": 0.161711,
       "error": "",
       "error_id": ""
     }
@@ -334,5 +406,5 @@
     "status": "NOT_RUN",
     "reason": "Sem credenciais de App; gh de teste nao faz chamadas de rede."
   },
-  "generated_utc": "2026-11-03T21:45:50Z"
+  "generated_utc": "2026-11-10T21:33:00Z"
 }

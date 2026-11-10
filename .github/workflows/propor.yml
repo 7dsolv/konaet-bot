@@ -16,24 +16,30 @@ jobs:
     steps:
       - name: Autenticar a App Konaet
         id: konaet
-        uses: 7dsolv/konaet-bot@v1.1.1
+        uses: 7dsolv/konaet-bot@a27acebb28894beb79a7f83409788d4122a9fd41 # validated v1.3.0 source
         with:
           client-id: ${{ vars.KONAET_APP_CLIENT_ID }}
           private-key: ${{ secrets.KONAET_APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          token: ${{ steps.konaet.outputs.token }}
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Preparar a branch e gerar um arquivo demonstrativo
         env:
           PROPOSAL_BRANCH: konaet/demo-status
+          GH_TOKEN: ${{ steps.konaet.outputs.token }}
         run: |
           set -euo pipefail
-          if git ls-remote --exit-code --heads origin "refs/heads/$PROPOSAL_BRANCH" >/dev/null; then
-            git fetch origin "refs/heads/$PROPOSAL_BRANCH"
+          netgit() { git -c http.https://github.com/.extraheader= -c credential.helper= -c 'credential.helper=!gh auth git-credential' "$@"; }
+          git config user.name 'konaet[bot]'
+          git config user.email '352182232+konaet[bot]@users.noreply.github.com'
+          netgit fetch origin main
+          if netgit ls-remote --exit-code --heads origin "refs/heads/$PROPOSAL_BRANCH" >/dev/null; then
+            netgit fetch origin "refs/heads/$PROPOSAL_BRANCH"
             git switch -c "$PROPOSAL_BRANCH" FETCH_HEAD
+            git merge --no-edit origin/main
           else
             git switch -c "$PROPOSAL_BRANCH"
           fi
@@ -41,7 +47,8 @@ jobs:
           date -u '+Konaet: ultima execucao em %Y-%m-%dT%H:%M:%SZ' > state/konaet-status.txt
 
       - name: Enviar somente o arquivo permitido para revisao
-        uses: ./propose
+        uses: 7dsolv/konaet-bot/propose@a27acebb28894beb79a7f83409788d4122a9fd41 # validated v1.3.0 source
+        id: proposal
         with:
           token: ${{ steps.konaet.outputs.token }}
           bot-login: ${{ steps.konaet.outputs.bot-login }}
@@ -51,3 +58,16 @@ jobs:
           base: ${{ github.event.repository.default_branch }}
           title: 'Konaet: atualizar estado demonstrativo'
           body: Demonstracao de identidade, diff permitido e proposta. O mantenedor decide o merge.
+      - name: Registrar proposta autenticada
+        env:
+          COMMIT: ${{ steps.proposal.outputs.commit }}
+          PR_URL: ${{ steps.proposal.outputs.pr-url }}
+          BOT_LOGIN: ${{ steps.konaet.outputs.bot-login }}
+        run: |
+          mkdir -p artifacts
+          jq -n --arg commit "$COMMIT" --arg pr "$PR_URL" --arg bot "$BOT_LOGIN" --arg source "$GITHUB_SHA" \
+            '{source_revision:$source,published_commit:$commit,pull_request:$pr,bot:$bot,fixture_used:false}' > artifacts/live-proposal.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: konaet-live-proposal
+          path: artifacts/live-proposal.json

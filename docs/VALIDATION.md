@@ -2,6 +2,21 @@
 
 A suíte está em [`tests/run_konaet_tests.m`](../tests/run_konaet_tests.m). Ela extrai os scripts dos próprios arquivos `action.yml`, evitando manter uma segunda implementação do módulo nos testes.
 
+## Revisão de integridade 1.3.0 — 10/11/2026
+
+A [suíte completa da PR #3](https://github.com/7dsolv/konaet-bot/actions/runs/42902432867)
+aprovou **49/49 cenários de contrato e Git** e **19/19 cenários do ativador**.
+Inclui PR de fork com o mesmo nome de branch, SHA divergente, resposta incompleta
+da API, múltiplas PRs, reescrita de URL Git, múltiplos destinos de push, stdout
+extenso, limite de saída e processo que ignora stdin até expirar o prazo.
+
+O CI executou o composite real em modo somente leitura e a suíte MATLAB em
+R2026b/Ubuntu 24.04. As respostas adversas da API são fixtures, com Git local
+real. A autenticação da App e o envio real de uma proposta têm evidências
+separadas abaixo. Os arquivos temporários têm acesso restrito para evitar
+bloqueio dos pipes; o caminho específico de permissões Windows ainda precisa
+de execução nesse sistema, separada dos resultados do runner Linux.
+
 A revisão `25cde3e41502023ea2c5c78730bc153bbdce2f96` completou **40/40 cenários offline**, com zero falhas. O [registro da execução](https://github.com/7dsolv/konaet-bot/actions/runs/41724466003) também contém o teste nativo do composite, a geração da vitrine com a marca KONAET e a verificação das mídias geradas. O campo `revision` do relatório identifica a origem dos números exibidos nas imagens.
 
 | Grupo | O que é exercitado |

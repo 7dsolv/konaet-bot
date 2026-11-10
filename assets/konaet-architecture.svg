@@ -454,7 +454,7 @@ font-family="DejaVu Sans" font-size="17" font-weight="700" font-style="normal"
 font-family="DejaVu Sans" font-size="17" font-weight="700" font-style="normal" 
 >
 <text fill="#f0ede0" fill-opacity="1" stroke="none" xml:space="preserve" x="0" y="-0.234375" font-family="DejaVu Sans" font-size="17" font-weight="700" font-style="normal" 
- >40/40 cenários offline aprovados | Git local real | API gh substituída por fixture</text>
+ >49/49 cenários offline aprovados | Git local real | API gh substituída por fixture</text>
 </g>
 
 <g fill="#ada3c4" fill-opacity="1" stroke="#ada3c4" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,71,793)"
