@@ -1,15 +1,15 @@
 {
   "generator": "visuals/render_konaet_assets.m",
-  "revision": "a27acebb28894beb79a7f83409788d4122a9fd41",
+  "revision": "7506bfda2a6fb503e0457132e149f560fd83295a",
   "test_mode": "offline-contract-and-real-local-git",
-  "test_passed": 49,
-  "test_total": 49,
+  "test_passed": 52,
+  "test_total": 52,
   "animation": {
     "frames": 48,
     "delay_seconds": 0.12,
     "width": 1535,
     "height": 823,
-    "bytes": 1.830912E+6,
+    "bytes": 1.829943E+6,
     "live_telemetry": false
   },
   "real_app_status": "NOT_RUN",
