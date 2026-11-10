@@ -93,13 +93,15 @@ jobs:
       - name: Testar contratos e Git local real
         uses: matlab-actions/run-command@v3
         with:
-          command: addpath('tests'); run_konaet_tests(pwd,fullfile(pwd,'artifacts'));
+          command: addpath('tests'); run_konaet_tests(pwd,fullfile(pwd,'artifacts')); run_activation_tests(pwd,fullfile(pwd,'artifacts'));
       - name: Guardar o relatorio de testes
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: konaet-test-report
-          path: artifacts/test-report.json
+          path: |
+            artifacts/test-report.json
+            artifacts/activation-test-report.json
           if-no-files-found: warn
           retention-days: 14
       - name: Desenhar a vitrine em MATLAB

@@ -14,6 +14,10 @@ Verified GitHub App identity and reviewable updates, with explicit repository sc
 
 [![Verificar pacote Konaet](https://github.com/7dsolv/konaet-bot/actions/workflows/verificar.yml/badge.svg)](https://github.com/7dsolv/konaet-bot/actions/workflows/verificar.yml)
 [![Licença MIT](https://img.shields.io/badge/license-MIT-c5ef65)](LICENSE)
+[![Identidade real da App](https://github.com/7dsolv/konaet-bot/actions/workflows/verificar-identidade.yml/badge.svg?branch=main)](https://github.com/7dsolv/konaet-bot/actions/workflows/verificar-identidade.yml)
+[![Release pública](https://img.shields.io/github/v/release/7dsolv/konaet-bot?label=release&color=8b5cf6)](https://github.com/7dsolv/konaet-bot/releases/latest)
+
+[Ativação das credenciais em MATLAB](docs/ACTIVATION.md) · [Evidências do agente e significado dos selos](https://github.com/7dsolv/RealidadeQuantica/blob/main/integrated/VERIFICATION.md)
 
 Uma Action para autenticar sua GitHub App e um módulo para transformar arquivos gerados pelo projeto em propostas revisáveis. A Konaet confere a identidade do bot, restringe o diff aos caminhos permitidos e entrega uma pull request ao mantenedor.
 
