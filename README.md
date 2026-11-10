@@ -2,6 +2,8 @@
 
 # KONAET
 
+**[Página da App KONAET](https://github.com/apps/konaet)** · **[Laboratório XENOELEMENT X-01](https://github.com/7dsolv/RealidadeQuantica/tree/main/xeno)**
+
 **Da App ao diff. Do diff à revisão.**
 
 Verified GitHub App identity and reviewable updates, with explicit repository scope.
@@ -96,8 +98,10 @@ O CI executa esses comandos, actionlint e ShellCheck, verifica o contrato JSON e
 
 O pacote é público e reutilizável sob licença MIT. A publicação da **Action** no Marketplace exige o contrato de desenvolvedor e a seleção de categoria na tela de release do GitHub. [Preparação da listagem](docs/MARKETPLACE.md).
 
-A App oficial **Konaet** e a identidade `konaet[bot]` dependem de registro, instalação e validação real. O workflow **Verificar identidade real da App** faz essa validação depois da configuração. Os testes offline não a declaram executada.
+A App **KONAET** já foi registrada, e a conta `konaet[bot]` existe. A autenticação por chave da App e sua instalação devem ser verificadas separadamente pelo workflow **Verificar identidade real da App**, após configurar as credenciais. Atribuir um commit à conta do bot não substitui essa autenticação; os testes offline não a declaram executada. A página da App fica em `/apps/konaet`; o endereço de perfil `/konaet[bot]` retorna 404.
 
 O pacote automatiza identidade e propostas. Modelos científicos e pesquisa neural continuam nos projetos [RealidadeQuantica](https://github.com/7dsolv/RealidadeQuantica) e [Konaet-IA](https://github.com/7dsolv/Konaet-IA). Contribuições antigas de `github-actions[bot]` permanecem no histórico dos respectivos projetos.
+
+O [XENOELEMENT X-01](https://github.com/7dsolv/RealidadeQuantica/tree/main/xeno) conecta percepção química e tátil, controle e resposta óptica em um protótipo MATLAB/Fortran/SystemVerilog. Publica equações, dados sintéticos, testes e gráficos, com fontes e antecedentes identificados. Suas avaliações medem tarefas numéricas definidas; não demonstram superioridade de um agente universal.
 
 Fontes do pacote em MATLAB e configurações YAML/JSON, sem fontes HTML, JavaScript ou Python. As Actions oficiais são dependências de infraestrutura. [Licença](LICENSE) · [Segurança](SECURITY.md) · [Mudanças](CHANGELOG.md).
