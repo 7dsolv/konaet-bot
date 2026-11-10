@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "status": "VERIFIED",
+  "authentication": "GitHub App installation token",
+  "source_revision": "30196d0098b6eed6eb3630bb06313a580301ca44",
+  "run_url": "https://github.com/7dsolv/konaet-bot/actions/runs/42883494662",
+  "bot_login": "konaet[bot]",
+  "bot_id": 352182232,
+  "installation_id": "178357340",
+  "token_repositories": [
+    "7dsolv/konaet-bot"
+  ],
+  "fixture_used": false
+}

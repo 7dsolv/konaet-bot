@@ -31,6 +31,10 @@ Esses testes não enviam Secrets nem autenticam a App real. `NOT_RUN` continua e
 
 ## Verificação real separada
 
-Registro e instalação da App, emissão/revogação de token no GitHub e criação de PR com a identidade oficial não são demonstrados pelo fixture. O relatório os marca como **NOT_RUN**. Depois de configurar a App, execute **Actions → Verificar identidade real da App** e depois o workflow manual de proposta para conferir a integração real.
+Em **10/11/2026**, a [execução real `42883494662`](https://github.com/7dsolv/konaet-bot/actions/runs/42883494662) autenticou a App KONAET. O GitHub confirmou `konaet[bot]`, ID `352182232`, e um token de instalação com acesso somente a `7dsolv/konaet-bot`. O [registro público](../assets/live-app.json) está em `VERIFIED`, com `fixture_used=false` e revisão de origem. O workflow também concluiu sua etapa de encerramento do token.
+
+Os relatórios dos testes offline continuam com **NOT_RUN** para a App real, pois usam fixtures e chaves sintéticas. Eles preservam o que cada suíte efetivamente executou. A autenticação real tem seu próprio workflow e sua própria evidência; criar/revisar uma PR e publicar o laboratório são operações verificadas à parte.
+
+O [teste real de proposta](https://github.com/7dsolv/konaet-bot/actions/runs/42884367354) também passou: `konaet[bot]` criou o commit `e6d4e5b` e a [PR #2](https://github.com/7dsolv/konaet-bot/pull/2), alterando somente `state/konaet-status.txt`. A [suíte da PR](https://github.com/7dsolv/konaet-bot/actions/runs/42884414001) passou; a proposta foi revisada pela conta `7dsolv` e incorporada. Esse arquivo é um registro demonstrativo do fluxo Git, não uma medida de inteligência.
 
 A suíte não mede superioridade frente a outros produtos, inteligência geral ou desempenho de um modelo neural. Duração de teste é diagnóstico da execução no runner, não benchmark de latência do serviço GitHub.

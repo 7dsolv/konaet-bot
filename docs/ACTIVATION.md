@@ -1,5 +1,7 @@
 # Ativação da App KONAET
 
+A instalação de `7dsolv` foi autenticada em **10/11/2026** na [execução real](https://github.com/7dsolv/konaet-bot/actions/runs/42883494662). As credenciais foram configuradas nos dois repositórios. As instruções abaixo servem para reproduzir a configuração ou trocar uma chave; os arquivos privados não estão no pacote.
+
 `ativar_konaet` automatiza a configuração na conta **7dsolv**. A chave privada original precisa existir; o GitHub guarda somente a parte pública e não permite recuperar a privada. [Gerenciamento oficial de chaves](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps).
 
 Na raiz deste pacote, no MATLAB:
