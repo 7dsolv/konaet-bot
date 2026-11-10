@@ -6,6 +6,8 @@
 
 **[Sistema offline KONAET: componentes em código, circuito e IA local](https://github.com/7dsolv/RealidadeQuantica/tree/main/offline)** · **[Explorar a placa em 3D](https://github.com/7dsolv/RealidadeQuantica/blob/main/hardware/x01-carrier/x01-carrier.stl)**
 
+**[KONAET integrada X02: pesos próprios, pesquisa com memória e FPGA](https://github.com/7dsolv/RealidadeQuantica/tree/main/integrated)** · **[Nova placa com ADC em 3D](https://github.com/7dsolv/RealidadeQuantica/blob/main/hardware/x02-acquisition/x02-acquisition.stl)**
+
 **Da App ao diff. Do diff à revisão.**
 
 Verified GitHub App identity and reviewable updates, with explicit repository scope.
@@ -14,6 +16,8 @@ Verified GitHub App identity and reviewable updates, with explicit repository sc
 [![Licença MIT](https://img.shields.io/badge/license-MIT-c5ef65)](LICENSE)
 
 Uma Action para autenticar sua GitHub App e um módulo para transformar arquivos gerados pelo projeto em propostas revisáveis. A Konaet confere a identidade do bot, restringe o diff aos caminhos permitidos e entrega uma pull request ao mantenedor.
+
+O [laboratório integrado](https://github.com/7dsolv/RealidadeQuantica/tree/main/integrated) é um módulo separado: treina o detector KONAET Sense do zero, atualiza uma política de pesquisa persistente e publica comparações, circuito, esquema/PCB e inferência SystemVerilog. Este pacote de identidade não é o modelo neural. Os resultados incluem cenários desfavoráveis e distinguem estimativas das ferramentas de medições físicas. A autenticação real da App continua dependendo das credenciais da instalação, conforme o [contrato](docs/CONTRACT.md).
 
 A identidade visual usa o **cubo roxo original da KONAET**, fornecido no projeto `konaet-cover`. O nome público é **KONAET**; o endereço técnico `7dsolv/konaet-bot` preserva as integrações existentes. [Origem da marca](visuals/brand/README.md).
 
