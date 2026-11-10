@@ -4,6 +4,8 @@
 
 **[Página da App KONAET](https://github.com/apps/konaet)** · **[Laboratório XENOELEMENT X-01](https://github.com/7dsolv/RealidadeQuantica/tree/main/xeno)**
 
+**[Sistema offline KONAET: componentes em código, circuito e IA local](https://github.com/7dsolv/RealidadeQuantica/tree/main/offline)** · **[Explorar a placa em 3D](https://github.com/7dsolv/RealidadeQuantica/blob/main/hardware/x01-carrier/x01-carrier.stl)**
+
 **Da App ao diff. Do diff à revisão.**
 
 Verified GitHub App identity and reviewable updates, with explicit repository scope.
