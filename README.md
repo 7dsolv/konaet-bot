@@ -70,7 +70,7 @@ jobs:
   propor:
     runs-on: ubuntu-24.04
     steps:
-      - uses: 7dsolv/konaet-bot@a27acebb28894beb79a7f83409788d4122a9fd41 # v1.3.0 source
+      - uses: 7dsolv/konaet-bot@7506bfda2a6fb503e0457132e149f560fd83295a # v1.3.1 source
         id: konaet
         with:
           client-id: ${{ vars.KONAET_APP_CLIENT_ID }}
@@ -87,7 +87,7 @@ jobs:
           mkdir -p relatorios
           date -u '+Execucao em %Y-%m-%dT%H:%M:%SZ' > relatorios/estado.txt
 
-      - uses: 7dsolv/konaet-bot/propose@a27acebb28894beb79a7f83409788d4122a9fd41 # v1.3.0 source
+      - uses: 7dsolv/konaet-bot/propose@7506bfda2a6fb503e0457132e149f560fd83295a # v1.3.1 source
         with:
           token: ${{ steps.konaet.outputs.token }}
           bot-login: ${{ steps.konaet.outputs.bot-login }}

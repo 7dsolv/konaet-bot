@@ -4,6 +4,22 @@ A suíte está em [`tests/run_konaet_tests.m`](../tests/run_konaet_tests.m). Ela
 
 ## Revisão de integridade 1.3.0 — 10/11/2026
 
+### Atualização 1.3.1: consistência da API e recuperação
+
+A [suíte ampliada](https://github.com/7dsolv/konaet-bot/actions/runs/42915084537)
+passou em **52/52 contratos/Git e 19/19 casos do ativador**. Os três casos novos
+cobrem SHA atrasado na listagem, SHA atrasado na releitura e erro de API após
+o push, seguido de recuperação sem commit duplicado. SHA persistentemente
+divergente, fork e branches incorretos continuam rejeitados.
+
+O publicador do laboratório encontrou uma falha transitória após um push; o
+registro inicial não preservou o diagnóstico capturado pela substituição de
+comando. A [segunda tentativa real](https://github.com/7dsolv/RealidadeQuantica/actions/runs/42913209521)
+recuperou o mesmo commit e concluiu a atualização. O atraso de indexação é
+coberto pelo regressivo; não foi medido no registro original. A nova versão
+mantém diagnósticos em stderr e espera de forma limitada pela confirmação do
+SHA exato. [Contrato da espera](CONTRACT.md).
+
 A [suíte completa da PR #3](https://github.com/7dsolv/konaet-bot/actions/runs/42902432867)
 aprovou **49/49 cenários de contrato e Git** e **19/19 cenários do ativador**.
 Inclui PR de fork com o mesmo nome de branch, SHA divergente, resposta incompleta
