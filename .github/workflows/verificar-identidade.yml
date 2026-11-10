@@ -14,6 +14,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Iniciar evidencia sem credenciais
+        run: |
+          mkdir -p artifacts
+          jq -n --arg revision "$GITHUB_SHA" --arg run "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            '{schema_version:1,status:"NOT_VERIFIED",source_revision:$revision,run_url:$run,fixture_used:false}' > artifacts/live-app.json
+
       - name: Conferir configuracao antes de autenticar
         env:
           APP_CLIENT_ID: ${{ vars.KONAET_APP_CLIENT_ID }}
@@ -35,5 +41,21 @@ jobs:
         env:
           BOT_LOGIN: ${{ steps.konaet.outputs.bot-login }}
           BOT_ID: ${{ steps.konaet.outputs.bot-id }}
+          INSTALLATION_ID: ${{ steps.konaet.outputs.installation-id }}
+          GH_TOKEN: ${{ steps.konaet.outputs.token }}
         run: |
+          set -euo pipefail
+          gh api /installation/repositories > "$RUNNER_TEMP/konaet-token-scope.json"
+          jq -e --arg repo "$GITHUB_REPOSITORY" '.total_count == 1 and .repositories[0].full_name == $repo' "$RUNNER_TEMP/konaet-token-scope.json"
+          jq -n --arg revision "$GITHUB_SHA" --arg run "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --arg login "$BOT_LOGIN" --argjson id "$BOT_ID" --arg installation "$INSTALLATION_ID" --arg repo "$GITHUB_REPOSITORY" \
+            '{schema_version:1,status:"VERIFIED",authentication:"GitHub App installation token",source_revision:$revision,run_url:$run,bot_login:$login,bot_id:$id,installation_id:$installation,token_repositories:[$repo],fixture_used:false}' > artifacts/live-app.json
           printf 'App autenticada: %s (ID %s).\n' "$BOT_LOGIN" "$BOT_ID" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: konaet-live-app-proof
+          path: artifacts/live-app.json
+          if-no-files-found: warn
+          retention-days: 30
