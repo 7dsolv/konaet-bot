@@ -13,6 +13,7 @@ concurrency:
 jobs:
   propor:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Autenticar a App Konaet
         id: konaet
@@ -66,7 +67,9 @@ jobs:
         run: |
           mkdir -p artifacts
           jq -n --arg commit "$COMMIT" --arg pr "$PR_URL" --arg bot "$BOT_LOGIN" --arg source "$GITHUB_SHA" \
-            '{source_revision:$source,published_commit:$commit,pull_request:$pr,bot:$bot,fixture_used:false}' > artifacts/live-proposal.json
+            --arg run "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            '{schema_version:1,source_revision:$source,published_commit:$commit,pull_request:$pr,bot:$bot,run_url:$run,fixture_used:false}' > artifacts/live-proposal.json
+          jq -r '"KONAET / \(.bot) / proposta: \(.pull_request) / commit: \(.published_commit)"' artifacts/live-proposal.json >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: konaet-live-proposal

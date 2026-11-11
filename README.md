@@ -117,7 +117,10 @@ O CI executa esses comandos, actionlint e ShellCheck, verifica o contrato JSON e
 
 ## Estado de publicação
 
-O pacote é público e reutilizável sob licença MIT. A publicação da **Action** no Marketplace exige o contrato de desenvolvedor e a seleção de categoria na tela de release do GitHub. [Preparação da listagem](docs/MARKETPLACE.md).
+O pacote é público e reutilizável sob licença MIT. A **Action KONAET v1.3.1**
+está [publicada no Marketplace](https://github.com/marketplace/actions/konaet),
+e a [App KONAET é pública](https://github.com/apps/konaet), verificado em
+11/11/2026. [Listagem](docs/MARKETPLACE.md) · [Adoção e limites](docs/ADOPTION.md).
 
 A App **KONAET** já foi registrada, e a conta `konaet[bot]` existe. A autenticação por chave da App e sua instalação devem ser verificadas separadamente pelo workflow **Verificar identidade real da App**, após configurar as credenciais. Atribuir um commit à conta do bot não substitui essa autenticação; os testes offline não a declaram executada. A página da App fica em `/apps/konaet`; o endereço de perfil `/konaet[bot]` retorna 404.
 
