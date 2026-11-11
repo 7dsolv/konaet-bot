@@ -19,7 +19,10 @@ O repositório é público, contém um único `action.yml` na raiz e usa licenç
 
 O nome público é **KONAET**. O caminho `7dsolv/konaet-bot` permanece estável para quem já usa a Action. O campo `branding` aceita os ícones predefinidos do GitHub; o cubo aparece na apresentação e no arquivo de avatar da App.
 
-Na tela de release, a conta proprietária precisa aceitar o **GitHub Marketplace Developer Agreement**, marcar **Publish this Action to the GitHub Marketplace**, selecionar as categorias e publicar/atualizar a release. O GitHub também exige autenticação de dois fatores. A captura fornecida pelo proprietário mostra que o contrato ainda bloqueava a caixa de publicação.
+A [listagem KONAET](https://github.com/marketplace/actions/konaet) e a
+[App pública](https://github.com/apps/konaet) foram confirmadas em 11/11/2026.
+A release v1.3.1 é imutável; seus assets e tag não são regravados por correções
+da documentação. Novas versões exigem testes e nova release.
 
 Uma release pública no repositório não confirma por si só a presença no Marketplace. A listagem só deve ser anunciada como publicada depois de seu endereço no Marketplace estar acessível.
 
