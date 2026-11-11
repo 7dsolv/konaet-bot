@@ -2,6 +2,8 @@
 
 # KONAET
 
+[Integração: laboratório científico, automação e recibos Sovereign](docs/ecosystem.md)
+
 **Hardened repository automation.** Validate a scoped App identity, publish an
 allowed diff and verify the exact repository/branch/commit of its pull request.
 See [maintenance and support](docs/MAINTENANCE.md), [usage contract](docs/CONTRACT.md)
