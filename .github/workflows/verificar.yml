@@ -67,10 +67,11 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: 7dsol3/konaet-sovereign-spec/infra/setup-ubuntu@441b0f1b92d606cfa4e56ef66f51d451428d7c9d
+      - uses: 7dsol3/konaet-sovereign-spec/infra/setup-ubuntu@4a38e19c0c82901bb2083d2d070b7675ea1a217d
       - uses: matlab-actions/setup-matlab@f9e43010f1ae678f7cfa0542fe2a4f60f7d1ad8d # v3
         with:
           release: R2026b
+          cache: true
       - name: Testar contratos e Git local real
         uses: matlab-actions/run-command@bfa857648f4895aa98a446fe41c85e0788421ed5 # v3
         with:
