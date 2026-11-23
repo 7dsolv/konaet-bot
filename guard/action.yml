@@ -1,0 +1,51 @@
+name: KONAET Guard
+description: Encontra tokens, chaves privadas e dados pessoais vazados no repositorio. Roda no proprio workflow, sem servidor e sem chave de API.
+inputs:
+  mode:
+    description: changed (so o que a PR ou o push introduziu) ou all (repositorio inteiro).
+    default: changed
+  fail-on:
+    description: Severidade minima que falha o job (critical, high, medium, low ou never).
+    default: high
+  detect-email:
+    description: Tambem reportar enderecos de e-mail (true/false).
+    default: 'false'
+  exclude:
+    description: Caminhos ignorados, um por linha. Termine com / para ignorar uma pasta.
+    default: ''
+outputs:
+  findings:
+    description: Total de achados.
+    value: ${{ steps.scan.outputs.findings }}
+  blocking:
+    description: Achados acima do limite fail-on.
+    value: ${{ steps.scan.outputs.blocking }}
+runs:
+  using: composite
+  steps:
+    - name: Definir intervalo de commits
+      id: range
+      shell: bash
+      env:
+        EVENT: ${{ github.event_name }}
+        PR_BASE: ${{ github.event.pull_request.base.sha }}
+        PUSH_BEFORE: ${{ github.event.before }}
+      run: |
+        set -euo pipefail
+        base=''
+        if [ "$EVENT" = pull_request ] || [ "$EVENT" = pull_request_target ]; then base="$PR_BASE"; fi
+        if [ "$EVENT" = push ] && [ -n "$PUSH_BEFORE" ] && [ "$PUSH_BEFORE" != 0000000000000000000000000000000000000000 ]; then base="$PUSH_BEFORE"; fi
+        if [ -n "$base" ] && ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+          git fetch --no-tags --depth=1 origin "$base" >/dev/null 2>&1 || base=''
+        fi
+        echo "base=$base" >> "$GITHUB_OUTPUT"
+    - name: Procurar segredos
+      id: scan
+      shell: bash
+      env:
+        GUARD_MODE: ${{ inputs.mode }}
+        GUARD_FAIL_ON: ${{ inputs.fail-on }}
+        GUARD_DETECT_EMAIL: ${{ inputs.detect-email }}
+        GUARD_EXCLUDE: ${{ inputs.exclude }}
+        GUARD_BASE: ${{ steps.range.outputs.base }}
+      run: node "$GITHUB_ACTION_PATH/scan.mjs"

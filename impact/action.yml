@@ -1,0 +1,70 @@
+name: KONAET Impact
+description: Relatorio de impacto verificavel da Pull Request (Causal Engine). Comenta na PR e falha so quando uma politica verificavel e violada.
+inputs:
+  api-key:
+    description: Chave da API KONAET (knt_live_...), guardada em um Actions Secret.
+    required: true
+  api-url:
+    description: Endereco base da API, por exemplo https://SEU_DOMINIO/v1.
+    required: true
+  comment:
+    description: Comentar o relatorio na PR (true/false).
+    default: 'true'
+  fail-on-block:
+    description: Falhar o job quando a decisao for block (true/false).
+    default: 'true'
+outputs:
+  decision:
+    description: pass ou block.
+    value: ${{ steps.impact.outputs.decision }}
+  risk:
+    description: Pontuacao de risco 0-100 (deterministica).
+    value: ${{ steps.impact.outputs.risk }}
+  digest:
+    description: Digest SHA3-512 do relatorio assinado.
+    value: ${{ steps.impact.outputs.digest }}
+runs:
+  using: composite
+  steps:
+    - name: Pedir o relatorio de impacto
+      id: impact
+      shell: bash
+      env:
+        KONAET_API_KEY: ${{ inputs.api-key }}
+        KONAET_API_URL: ${{ inputs.api-url }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        REPO: ${{ github.repository }}
+        COMMENT: ${{ inputs.comment }}
+        FAIL_ON_BLOCK: ${{ inputs.fail-on-block }}
+      run: |
+        set -euo pipefail
+        fail() { echo "::error::$1"; exit 1; }
+        [ -n "$PR_NUMBER" ] || fail 'Use este modulo em eventos pull_request.'
+        case "$KONAET_API_KEY" in knt_live_*) ;; *) fail 'api-key nao tem o formato knt_live_.' ;; esac
+        case "$KONAET_API_URL" in https://*) ;; *) fail 'api-url precisa comecar com https://' ;; esac
+        comment=false; [ "$COMMENT" = true ] && comment=true
+        body=$(jq -n --arg repo "$REPO" --argjson pull "$PR_NUMBER" --argjson comment "$comment" '{repo:$repo,pull:$pull,comment:$comment}')
+        out=$(mktemp)
+        code=$(curl -sS -o "$out" -w '%{http_code}' --max-time 120 -X POST "${KONAET_API_URL%/}/impact" \
+          -H "Authorization: Bearer $KONAET_API_KEY" -H 'Content-Type: application/json' \
+          -H "Idempotency-Key: impact-${PR_NUMBER}-${HEAD_SHA:0:12}-${GITHUB_RUN_ATTEMPT:-1}" --data "$body")
+        if [ "$code" != 201 ] && [ "$code" != 200 ]; then
+          fail "API KONAET respondeu $code: $(jq -r '.error.message // "erro"' "$out" 2>/dev/null)"
+        fi
+        decision=$(jq -r '.report.payload.policy.decision' "$out")
+        risk=$(jq -r '.report.payload.risk.score' "$out")
+        digest=$(jq -r '.report.digest' "$out")
+        { echo "decision=$decision"; echo "risk=$risk"; echo "digest=$digest"; } >> "$GITHUB_OUTPUT"
+        {
+          echo "## KONAET Impact"
+          echo "Decisao: **$decision** · Risco: **$risk/100**"
+          echo
+          jq -r '.report.payload.policy.results[] | "- `\(.rule)`: \(.outcome) — \(.message)"' "$out"
+          cmd=$(jq -r '.report.payload.tests.command // empty' "$out")
+          if [ -n "$cmd" ]; then echo; echo 'Testes de regressao selecionados:'; echo '```'; echo "$cmd"; echo '```'; fi
+          echo; echo "<sub>Relatorio assinado · $digest</sub>"
+        } >> "$GITHUB_STEP_SUMMARY"
+        if [ "$decision" = block ] && [ "$FAIL_ON_BLOCK" = true ]; then
+          fail "Bloqueado por politica: $(jq -r '.report.payload.policy.blockingRules | join(", ")' "$out")"
+        fi
