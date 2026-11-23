@@ -1,0 +1,139 @@
+name: KONAET API
+description: Envia arquivos para a API KONAET, que abre a Pull Request com a identidade konaet[bot]. Sem chave privada de App no seu repositorio.
+inputs:
+  api-key:
+    description: Chave da API KONAET (knt_live_...), guardada em um Actions Secret.
+    required: true
+  api-url:
+    description: Endereco base da API, por exemplo https://SEU_DOMINIO/v1.
+    required: true
+  paths:
+    description: Arquivos ou diretorios enviados, um por linha, relativos a raiz e sem glob.
+    required: true
+  title:
+    description: Titulo da Pull Request.
+    default: 'KONAET: revisar atualizacoes'
+  body:
+    description: Descricao enviada ao revisor.
+    default: Atualizacao gerada pelo workflow para revisao do mantenedor.
+  base:
+    description: Branch que recebera a proposta. Vazio usa a branch padrao.
+    default: ''
+  repository:
+    description: Repositorio de destino (owner/nome). Precisa ser da conta dona da chave.
+    default: ${{ github.repository }}
+  idempotency-key:
+    description: Prefixo da chave de idempotencia. O modulo acrescenta o hash do conteudo, entao arquivos diferentes nunca reaproveitam outra proposta.
+    default: ${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ github.action }}
+outputs:
+  proposal-id:
+    description: ID da proposta na KONAET.
+    value: ${{ steps.send.outputs.proposal-id }}
+  pr-url:
+    description: URL da Pull Request; vazia quando nada mudou.
+    value: ${{ steps.send.outputs.pr-url }}
+  state:
+    description: completed, failed ou unknown.
+    value: ${{ steps.send.outputs.state }}
+  changed:
+    description: true quando a proposta mudou algum arquivo.
+    value: ${{ steps.send.outputs.changed }}
+  approval-id:
+    description: Preenchido quando a proposta e critica e espera aprovacao humana no painel.
+    value: ${{ steps.send.outputs.approval-id }}
+runs:
+  using: composite
+  steps:
+    - name: Enviar arquivos para a API KONAET
+      id: send
+      shell: bash
+      env:
+        KONAET_API_KEY: ${{ inputs.api-key }}
+        KONAET_API_URL: ${{ inputs.api-url }}
+        ALLOW_PATHS: ${{ inputs.paths }}
+        PR_TITLE: ${{ inputs.title }}
+        PR_BODY: ${{ inputs.body }}
+        BASE_BRANCH: ${{ inputs.base }}
+        TARGET_REPO: ${{ inputs.repository }}
+        IDEMPOTENCY_KEY: ${{ inputs.idempotency-key }}
+      run: |
+        set -euo pipefail
+        fail() { echo "::error::$1"; exit 1; }
+        [ -n "$KONAET_API_KEY" ] || fail 'api-key vazio: configure o segredo KONAET_API_KEY.'
+        case "$KONAET_API_KEY" in knt_live_*) ;; *) fail 'api-key nao tem o formato knt_live_.' ;; esac
+        echo "::add-mask::$KONAET_API_KEY"
+        api="${KONAET_API_URL%/}"
+        case "$api" in https://*/v1|http://localhost:*/v1|http://127.0.0.1:*/v1) ;; *) fail 'api-url deve ser https://<dominio>/v1.' ;; esac
+        [[ "$TARGET_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || fail 'repository deve ser owner/nome.'
+        idem="$(printf '%s' "$IDEMPOTENCY_KEY" | tr -c 'A-Za-z0-9_.:-' '-' | cut -c1-128)"
+        [ "${#idem}" -ge 8 ] || fail 'idempotency-key precisa de pelo menos 8 caracteres.'
+
+        work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT; chmod 700 "$work"
+        : > "$work/list"
+        while IFS= read -r entry || [ -n "$entry" ]; do
+          entry="${entry#"${entry%%[![:space:]]*}"}"; entry="${entry%"${entry##*[![:space:]]}"}"
+          [ -n "$entry" ] || continue
+          case "/$entry/" in */../*|*/./*) fail "Caminho com . ou ..: $entry" ;; esac
+          case "$entry" in /*|*'*'*|*'?'*|*'['*) fail "Use caminho relativo, sem glob: $entry" ;; esac
+          if [ -L "$entry" ]; then fail "Links simbolicos nao sao enviados: $entry"
+          elif [ -f "$entry" ]; then printf '%s\0' "$entry" >> "$work/list"
+          elif [ -d "$entry" ]; then find "$entry" -path '*/.git' -prune -o -type f -print0 >> "$work/list"
+          else fail "Arquivo ou diretorio inexistente: $entry"; fi
+        done <<< "$ALLOW_PATHS"
+        mapfile -d '' files < <(sort -zu "$work/list")
+        [ "${#files[@]}" -gt 0 ] || fail 'Nenhum arquivo encontrado em paths.'
+
+        jq -n --arg repo "$TARGET_REPO" --arg title "$PR_TITLE" --arg body "$PR_BODY" --arg base "$BASE_BRANCH" \
+          '{repo:$repo,title:$title,body:$body,files:[]} + (if $base=="" then {} else {base:$base} end)' > "$work/payload.json"
+        for f in "${files[@]}"; do
+          rel="${f#./}"
+          base64 -w0 < "$f" > "$work/blob"
+          exec_flag=false; [ -x "$f" ] && exec_flag=true
+          jq --arg path "$rel" --rawfile content "$work/blob" --argjson exec "$exec_flag" \
+            '.files += [{path:$path,content:$content,encoding:"base64",executable:$exec}]' "$work/payload.json" > "$work/next.json"
+          mv "$work/next.json" "$work/payload.json"
+        done
+
+        # Mesma execucao + mesmo conteudo = mesma chave: repetir o POST devolve a mesma proposta.
+        idem="${idem:0:100}-$(sha256sum "$work/payload.json" | cut -c1-24)"
+        umask 077
+        printf 'Authorization: Bearer %s\n' "$KONAET_API_KEY" > "$work/auth"
+        status="$(curl -sS --retry 3 --max-time 180 -o "$work/response.json" -w '%{http_code}' \
+          -X POST "$api/proposals" -H @"$work/auth" -H 'Content-Type: application/json' \
+          -H "Idempotency-Key: $idem" --data-binary @"$work/payload.json")" || fail 'API KONAET indisponivel.'
+        # Um replay pode chegar enquanto a primeira tentativa ainda roda: espera ate 5 minutos.
+        tries=0
+        while [ "$status" = 200 ] && [ "$(jq -r '.proposal.state // empty' "$work/response.json" 2>/dev/null)" = pending ] && [ "$tries" -lt 60 ]; do
+          sleep 5; tries=$((tries+1))
+          id="$(jq -r '.proposal.id' "$work/response.json")"
+          status="$(curl -sS --retry 3 --max-time 30 -o "$work/response.json" -w '%{http_code}' \
+            "$api/proposals/$id" -H @"$work/auth")" || fail 'API KONAET indisponivel.'
+        done
+
+        jq -e . "$work/response.json" > /dev/null 2>&1 || fail "Resposta invalida da API (HTTP $status)."
+        message="$(jq -r '.error.message // .notice // empty' "$work/response.json")"
+        request_id="$(jq -r '.requestId // empty' "$work/response.json")"
+        if [ -n "$(jq -r '.proposal.id // empty' "$work/response.json")" ]; then
+          {
+            echo "proposal-id=$(jq -r '.proposal.id' "$work/response.json")"
+            echo "pr-url=$(jq -r '.proposal.prUrl // empty' "$work/response.json")"
+            echo "state=$(jq -r '.proposal.state' "$work/response.json")"
+            echo "changed=$(jq -r 'if .proposal.changed==true then "true" else "false" end' "$work/response.json")"
+          } >> "$GITHUB_OUTPUT"
+        fi
+        case "$status" in
+          200|201)
+            [ "$(jq -r '.proposal.state' "$work/response.json")" = completed ] || fail "Proposta em estado $(jq -r '.proposal.state' "$work/response.json"): ${message:-confira /v1/proposals}"
+            url="$(jq -r '.proposal.prUrl // empty' "$work/response.json")"
+            if [ -n "$url" ]; then echo "### KONAET: [proposta para revisao]($url)" >> "$GITHUB_STEP_SUMMARY"
+            else echo "### KONAET: ${message:-nada mudou}" >> "$GITHUB_STEP_SUMMARY"; fi ;;
+          202)
+            approval="$(jq -r '.approval.id // empty' "$work/response.json")"
+            if [ -n "$approval" ]; then
+              echo "approval-id=$approval" >> "$GITHUB_OUTPUT"
+              echo "::notice::Operacao critica: aguardando aprovacao humana no painel KONAET ($(jq -r '.approval.approveAt' "$work/response.json"))."
+              echo "### KONAET: aguardando aprovacao humana ($(jq -r '[.approval.reasons[].reason] | unique | join(", ")' "$work/response.json"))" >> "$GITHUB_STEP_SUMMARY"
+            else fail "Status indeterminado: ${message} Confira a branch konaet/api/* antes de repetir."; fi ;;
+          422) fail "Recusado: ${message}$(jq -r 'if .error.details then " ("+([.error.details[] | .path+":"+(.line|tostring)] | join(", "))+")" else "" end' "$work/response.json")" ;;
+          *) fail "HTTP $status: ${message:-erro desconhecido}${request_id:+ (requestId $request_id)}" ;;
+        esac
