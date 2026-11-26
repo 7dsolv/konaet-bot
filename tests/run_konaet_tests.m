@@ -237,7 +237,7 @@ switch name
         body = sprintf('`touch %s`\n$(touch %s)', sentinel, sentinel);
         setenv('PR_TITLE', title); setenv('PR_BODY', body);
     case 'credential-in-commit-message'
-        sample = ['ghs' '_' 'aB9qM3tL7yP2wR5jZ4eX8uK6sV1nC0gD9fH'];
+        sample = ['ghs' '_' 'aB9qM3tL7yP2wR5jZ4eX8uK6sV1nC0gD9fH7qR2z'];
         setenv('COMMIT_MESSAGE', sample);
         expected_failure = true;
     case 'unexpected-pr-url'
