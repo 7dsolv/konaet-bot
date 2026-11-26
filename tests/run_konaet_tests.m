@@ -21,7 +21,7 @@ proposal_names = {'no-change', 'new-proposal', 'delete-and-create', 'spaces', ..
     'glob-path', 'merged-remote', 'rename-unstaged-within', 'cancelled-staging', ...
     'fork-only-pr', 'wrong-head-sha', 'wrong-head-branch', 'wrong-head-base', ...
     'duplicate-own-pr', 'wrong-view-sha', 'rewritten-origin', 'rewritten-push', 'multiple-push-urls', ...
-    'delayed-list-head','delayed-view-head','proposal-api-failure'};
+    'delayed-list-head','delayed-view-head','proposal-api-failure','credential-in-commit-message'};
 for i = 1:numel(identity_names)
     name = identity_names{i};
     cases(end+1) = evaluate(name, 'identity-offline', @() identity_case(root, name)); %#ok<AGROW>
@@ -236,6 +236,10 @@ switch name
         title = ['$(touch ' sentinel ')'];
         body = sprintf('`touch %s`\n$(touch %s)', sentinel, sentinel);
         setenv('PR_TITLE', title); setenv('PR_BODY', body);
+    case 'credential-in-commit-message'
+        sample = ['ghs' '_' 'aB9qM3tL7yP2wR5jZ4eX8uK6sV1nC0gD9fH7qR2z'];
+        setenv('COMMIT_MESSAGE', sample);
+        expected_failure = true;
     case 'unexpected-pr-url'
         write_text(fullfile(f.mock, 'pr.tsv'), sprintf('23\thttps://github.com/outro/repo/pull/23\n'));
         expected_failure = true;
@@ -268,6 +272,11 @@ else
     assert(status == 0, 'Proposta falhou: %s', log);
 end
 assert(strcmp(base, bare_git(f, 'rev-parse refs/heads/main')), 'Branch base foi alterada.');
+if strcmp(name,'credential-in-commit-message')
+    assert(~contains(log,sample), 'A credencial foi exposta no log.');
+    assert(contains(log,'Envio bloqueado'), 'O scanner nao bloqueou os metadados.');
+    assert(strcmp(base,git(f,'rev-parse HEAD')), 'A credencial chegou a um commit local.');
+end
 if ismember(name, {'no-change', 'unchanged-remote', 'merged-remote', 'cancelled-staging'})
     if ismember(name, {'no-change', 'cancelled-staging'})
         assert(isempty(remote_head(f, 'konaet/updates')));
@@ -334,7 +343,7 @@ assert(isequal(sort(fieldnames(c.default_permissions)), {'contents'; 'pull_reque
 assert(c.public && ~c.hook_attributes.active && isempty(c.default_events));
 end
 
-function [f, guard] = fixture(~)
+function [f, guard] = fixture(root)
 f.folder = tempname;
 mkdir(f.folder); f.remote = fullfile(f.folder, 'remote.git');
 f.work = fullfile(f.folder, 'work'); f.mock = fullfile(f.folder, 'mock');
@@ -343,7 +352,7 @@ names = {'PATH','GH_TOKEN','GH_HOST','GITHUB_REPOSITORY','GITHUB_OUTPUT', ...
     'MOCK_DIR','APP_SLUG','EXPECTED_SLUG','BOT_LOGIN','BOT_ID','ALLOW_PATHS', ...
     'PROPOSAL_BRANCH','BASE_BRANCH','DEFAULT_BRANCH','SERVER_URL','PR_TITLE','PR_BODY','COMMIT_MESSAGE', ...
     'GIT_AUTHOR_NAME','GIT_AUTHOR_EMAIL','GIT_COMMITTER_NAME','GIT_COMMITTER_EMAIL', ...
-    'GIT_TERMINAL_PROMPT','BASH_ENV'};
+    'GIT_TERMINAL_PROMPT','BASH_ENV','KONAET_GUARD'};
 old = cellfun(@getenv, names, UniformOutput=false);
 guard = onCleanup(@() cleanup_fixture(f.folder, names, old));
 % Um valor vazio restaurado por setenv ainda pode existir no ambiente do Git.
@@ -363,6 +372,7 @@ setenv('PATH', [f.mock pathsep getenv('PATH')]);
 setenv('GH_TOKEN', 'offline-fixture-not-a-token'); setenv('GH_HOST', 'github.com');
 setenv('GITHUB_REPOSITORY', 'konaet-tests/fixture'); setenv('GITHUB_OUTPUT', f.output);
 setenv('MOCK_DIR', f.mock);
+setenv('KONAET_GUARD', fullfile(root, 'propose', 'check.mjs'));
 end
 
 function seed_proposal(f)
