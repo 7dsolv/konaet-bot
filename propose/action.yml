@@ -60,6 +60,7 @@ runs:
         COMMIT_MESSAGE: ${{ inputs.commit-message }}
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         SERVER_URL: ${{ github.server_url }}
+        KONAET_GUARD: ${{ github.action_path }}/check.mjs
       run: |
         set -euo pipefail
         fail() { echo "::error::$1" >&2; exit 1; }
@@ -126,6 +127,9 @@ runs:
           git diff --no-renames --name-only -z "$merge_base" "$1" -- > "$temp_dir/diff"
           mapfile -d '' proposed < "$temp_dir/diff"
           validate_files "${proposed[@]}"
+          local base_sha
+          base_sha="$(git rev-parse "refs/remotes/origin/${BASE_BRANCH}")"
+          env -u GH_TOKEN -u GITHUB_TOKEN node "$KONAET_GUARD" "$base_sha" "$1" || fail 'Envio bloqueado pela verificacao local da proposta.'
         }
 
         remote_sha="$(git_network ls-remote --heads origin "refs/heads/${PROPOSAL_BRANCH}" | cut -f1)"

@@ -9,9 +9,6 @@ on:
 permissions:
   contents: read
 
-env:
-  MLM_LICENSE_TOKEN: ${{ secrets.MLM_LICENSE_TOKEN }}
-
 jobs:
   composite-smoke-offline:
     runs-on: ubuntu-24.04
@@ -21,6 +18,8 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - name: Testar inspecao local de propostas
+        run: node --test tests/proposal-guard.test.mjs
       - name: Executar composite sem alteracoes e com token somente leitura
         uses: ./propose
         id: smoke
@@ -73,6 +72,8 @@ jobs:
           release: R2026b
           cache: true
       - name: Testar contratos e Git local real
+        env:
+          MLM_LICENSE_TOKEN: ${{ secrets.MLM_LICENSE_TOKEN }}
         uses: matlab-actions/run-command@bfa857648f4895aa98a446fe41c85e0788421ed5 # v3
         with:
           command: addpath('tests'); run_konaet_tests(pwd,fullfile(pwd,'artifacts')); run_activation_tests(pwd,fullfile(pwd,'artifacts'));
@@ -87,11 +88,15 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - name: Desenhar a vitrine em MATLAB
+        env:
+          MLM_LICENSE_TOKEN: ${ secrets.MLM_LICENSE_TOKEN }
         if: github.event_name == 'workflow_dispatch'
         uses: matlab-actions/run-command@bfa857648f4895aa98a446fe41c85e0788421ed5 # v3
         with:
           command: r = jsondecode(fileread(fullfile('artifacts','test-report.json'))); addpath('visuals'); output = fullfile(pwd,'artifacts','showcase'); render_konaet_assets(output,r); copyfile(fullfile('artifacts','test-report.json'),fullfile(output,'test-report.json')); verify_konaet_assets(output);
       - name: Verificar as midias publicadas
+        env:
+          MLM_LICENSE_TOKEN: ${ secrets.MLM_LICENSE_TOKEN }
         if: github.event_name != 'workflow_dispatch'
         uses: matlab-actions/run-command@bfa857648f4895aa98a446fe41c85e0788421ed5 # v3
         with:
