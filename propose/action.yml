@@ -67,6 +67,7 @@ runs:
         [ "$SERVER_URL" = 'https://github.com' ] || fail 'Este pacote suporta GitHub.com.'
         [[ "$GITHUB_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || fail 'Repositorio invalido.'
         [[ "$BOT_LOGIN" =~ ^[a-z0-9-]+\[bot\]$ ]] && [[ "$BOT_ID" =~ ^[1-9][0-9]*$ ]] || fail 'Identidade Bot invalida.'
+        env -u GH_TOKEN -u GITHUB_TOKEN node "$KONAET_GUARD" --metadata || fail 'Envio bloqueado pela verificacao local da proposta.'
         git check-ref-format --branch "$PROPOSAL_BRANCH" >/dev/null || fail 'Branch de proposta invalida.'
         git check-ref-format --branch "$BASE_BRANCH" >/dev/null || fail 'Branch base invalida.'
         [ "$PROPOSAL_BRANCH" != "$BASE_BRANCH" ] && [ "$PROPOSAL_BRANCH" != "$DEFAULT_BRANCH" ] || fail 'A proposta nao pode publicar na branch base/padrao.'
@@ -167,7 +168,7 @@ runs:
           email="${BOT_ID}+${BOT_LOGIN}@users.noreply.github.com"
           GIT_AUTHOR_NAME="$BOT_LOGIN" GIT_AUTHOR_EMAIL="$email" \
             GIT_COMMITTER_NAME="$BOT_LOGIN" GIT_COMMITTER_EMAIL="$email" \
-            git commit -m "$COMMIT_MESSAGE"
+            git commit --quiet -m "$COMMIT_MESSAGE"
           commit_sha="$(git rev-parse HEAD)"
           validate_proposal "$commit_sha"
           git_network push origin "HEAD:refs/heads/${PROPOSAL_BRANCH}"

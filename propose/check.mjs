@@ -41,15 +41,18 @@ function reviewDiff(from, to, reviewed, budget) {
   }
 }
 
-try {
+function verifyProposal() {
+  for (const name of ['PR_TITLE', 'PR_BODY', 'COMMIT_MESSAGE', 'PROPOSAL_BRANCH', 'BASE_BRANCH', 'ALLOW_PATHS']) {
+    ensureText(process.env[name] || '');
+  }
   const [base, tip] = process.argv.slice(2);
+  if (base === '--metadata' && tip === undefined) return;
   const hash = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
   if (!hash.test(base || '') || !hash.test(tip || '')) block('Referência inválida para verificar a proposta.');
   const commits = git('rev-list', `--max-count=${maxCommits + 1}`, `${base}..${tip}`).toString().trim().split(/\s+/).filter(Boolean);
   if (commits.length > maxCommits) block('A proposta tem muitos commits para inspeção. Divida as alterações.');
   const reviewed = new Set();
   const budget = {bytes: 0};
-  for (const name of ['PR_TITLE', 'PR_BODY', 'COMMIT_MESSAGE']) ensureText(process.env[name] || '');
   for (const commit of commits) {
     ensureText(git('show', '-s', '--format=%B', commit).toString());
     const parents = git('show', '-s', '--format=%P', commit).toString().trim().split(/\s+/).filter(Boolean);
@@ -61,6 +64,10 @@ try {
   }
   reviewDiff(git('merge-base', base, tip).toString().trim(), tip, reviewed, budget);
   process.stdout.write('Verificação local da proposta aprovada.\n');
+}
+
+try {
+  verifyProposal();
 } catch (error) {
   process.stderr.write((error instanceof Rejected ? error.message : 'Não foi possível concluir a inspeção local da proposta.')+'\n');
   process.exitCode = 1;
