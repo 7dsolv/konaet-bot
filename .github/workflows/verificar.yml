@@ -89,14 +89,14 @@ jobs:
           retention-days: 14
       - name: Desenhar a vitrine em MATLAB
         env:
-          MLM_LICENSE_TOKEN: ${ secrets.MLM_LICENSE_TOKEN }
+          MLM_LICENSE_TOKEN: ${{ secrets.MLM_LICENSE_TOKEN }}
         if: github.event_name == 'workflow_dispatch'
         uses: matlab-actions/run-command@bfa857648f4895aa98a446fe41c85e0788421ed5 # v3
         with:
           command: r = jsondecode(fileread(fullfile('artifacts','test-report.json'))); addpath('visuals'); output = fullfile(pwd,'artifacts','showcase'); render_konaet_assets(output,r); copyfile(fullfile('artifacts','test-report.json'),fullfile(output,'test-report.json')); verify_konaet_assets(output);
       - name: Verificar as midias publicadas
         env:
-          MLM_LICENSE_TOKEN: ${ secrets.MLM_LICENSE_TOKEN }
+          MLM_LICENSE_TOKEN: ${{ secrets.MLM_LICENSE_TOKEN }}
         if: github.event_name != 'workflow_dispatch'
         uses: matlab-actions/run-command@bfa857648f4895aa98a446fe41c85e0788421ed5 # v3
         with:
